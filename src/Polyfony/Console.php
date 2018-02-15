@@ -9,7 +9,7 @@ class Console {
 	protected static $_commands 		= [
 		'help'			=>[
 			'usage'			=>'Console help',
-			'description'	=>'Shows this help'
+			'description'	=>'Display this help message'
 		],
 		'sync'					=>[
 			// usage for that command
@@ -36,7 +36,7 @@ class Console {
 		],
 		'vacuum-database'		=>[
 			'usage'			=>'Console vacuum-database',
-			'description'	=>'Executed a vacuum command on the database to free up space'
+			'description'	=>'Executes a vacuum command on the database to free up space'
 		],
 		'clean-cache'			=>[
 			'usage'			=>'Console clean-cache',
@@ -142,7 +142,7 @@ class Console {
 			$required_arguments_count = isset(self::$_commands[$command]['arguments']) ? count(self::$_commands[$command]['arguments']) : 0;
 
 			// if that command requires parameters and that we don't have enough
-			if($required_arguments_count && $required_arguments_count < (count($_SERVER['argv']) + 1)) {
+			if($required_arguments_count && count($_SERVER['argv']) < ($required_arguments_count + 2)) {
 
 				// show the usage for that specific command
 				Console\Format::line('Not enough arguments provided' , 'red', null, []);
@@ -165,6 +165,8 @@ class Console {
 
 					case 'sync':
 
+
+
 					break;
 
 					case 'check-config':
@@ -176,6 +178,8 @@ class Console {
 					break;
 
 					case 'generate-symlinks':
+
+						self::generateSymlinksCommand();
 
 					break;
 
@@ -234,19 +238,79 @@ class Console {
 		);
 
 		// main usage
+		Console\Format::line('Usage' , 'white', null, ['bold']);
+		Console\Format::line('  command [arguments]' , 'green', null);
+		Console\Format::line('');
+
+		// available commands
 		Console\Format::line('Available commands' , 'white', null, ['bold']);
 
 		// build the list of available commands
 		foreach(self::$_commands as $command => $infos) {
 
 			// show that command's info
-			Console\Format::raw('  '. str_pad($command,28,' '), 'green');
+			Console\Format::raw('  '. str_pad($command,22,' '), 'green');
 			Console\Format::raw($infos['description'], 'white', null, ['italic']);
 			echo "\n";
 		}
 
 		// skip a line
 		Console\Format::line('');
+
+	}
+
+	private static function generateSymlinksCommand() {
+		// pretty introduction
+		Console\Format::block('Generating assets symlinks', 'cyan', null, ['bold']);
+		// define the bundles dir
+		$bundles_dir = realpath(__DIR__.'/../../../../../Bundles/').'/';
+		// for each bundle
+		foreach(scandir($bundles_dir) as $bundle_name) {
+			// bundle assets folder
+			$bundles_assets_dir = $bundles_dir . $bundle_name .'/Assets/';
+			// if the is no assets folder in that bundle
+			if(!is_dir($bundles_assets_dir) || in_array($bundle_name,['.','..'])) {
+				continue;
+			} 
+			Console\Format::line('Bundles/'.$bundle_name, 'white', null, ['bold']);
+			// get assets for that bundle
+			foreach(scandir($bundles_assets_dir) as $assets_type) {
+				// the directory for theses assets in this bundle
+				$bundle_assets_type_dir = $bundles_assets_dir . $assets_type . '/';
+				// skip non valid directories
+				if(!is_dir($bundle_assets_type_dir) || in_array($assets_type,['.','..'])) {
+					continue;
+				}
+				// set the root path
+				$assets_root_path = realpath(__DIR__."/../../../../../../Public/Assets")."/{$assets_type}/";
+				// if it doesn't already exist 
+				if(!is_dir($assets_root_path)) {
+					// create the path
+					if(@mkdir($assets_root_path, 0777, true)) {
+						// feedback
+						Console\Format::line('  + Public/Assets/'.$assets_type.'/', 'green', null);
+					}
+					else {
+						// feedback
+						Console\Format::line('  X Public/Assets/'.$assets_type.'/ (failed)', 'red', null);
+					}
+				}
+				// set the symlink 
+				$assets_symbolic_path = $assets_root_path . $bundle_name;
+				// if the symlink does not already exists
+				if(!is_link($assets_symbolic_path)) {
+					// create the symlink
+					if(@symlink($bundle_assets_type_dir, $assets_root_path.$bundle_name)) {
+						// feedback
+						Console\Format::line('  + Public/Assets/'.$assets_type.'/'.$bundle_name.'/', 'green', null);
+					}
+					else {
+						// feedback
+						Console\Format::line('  X Public/Assets/'.$assets_type.'/'.$bundle_name.'/ (failed)', 'red', null);
+					}
+				}
+			}
+		}
 
 	}
 /*
@@ -384,31 +448,5 @@ class Console {
 */
 
 }
-
-/*
-
-// has error
-		$has_error = false;
-		// for each bundle
-		foreach(Pf\Bundles::getAvailable() as $bundle_name) {
-			// get assets for that bundle
-			foreach(Pf\Bundles::getAssets($bundle_name) as $assets_type => $assets_path) {
-				// get the correct relativeness
-				$assets_path = "../../{$assets_path}";
-				// set the root path
-				$assets_root_path = "./Assets/{$assets_type}/";
-				// create the public root path
-				Pf\Filesystem::mkdir($assets_root_path, 0777, true) ?: $has_error = true;
-				// set the symlink 
-				$assets_symbolic_path = $assets_root_path . $bundle_name;
-				// if the symlink does not already exists
-				if(!Pf\Filesystem::isSymbolic($assets_symbolic_path, true)) {
-					// create the symlink
-					Pf\Filesystem::symlink($assets_path, $assets_symbolic_path, true) ?: $has_error = true;
-				}
-			}
-		}
-
-*/
 
 ?>
