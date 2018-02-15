@@ -5,6 +5,9 @@ namespace Polyfony;
 // the class itself
 class Console {
 
+	// the root path of the project
+	protected static $_root_path = '';
+
 	// list of available command, syntax, configs, and usage
 	protected static $_commands 		= [
 		'help'			=>[
@@ -23,11 +26,7 @@ class Console {
 			// configs element for that command
 			'configs'=>[
 				'rsync_options'	=>'-avzlp --delete --chmod=ugo+rwX --exclude=".DS_Store" -e "ssh -p _port_" ',
-				'folders'		=>[],
-				'local_path'	=>null,
-				'remote_path'	=>null,
-				'remote_user'	=>null,
-				'remote_host'	=>null
+				'folders'		=>[]
 			]
 		],
 		'check-config'			=>[
@@ -99,24 +98,6 @@ class Console {
 
 	];
 
-	// color a string
-	private static function color($string, $color, $negative = false) {
-		return($string);
-	}
-
-	// add a folder to sync
-	public static function folder($folder, $confirm = false) {
-		// set the folder name
-		$folder_path = trim($folder, '/') . '/';
-		// spool the folder
-		self::$_folders[] = array(
-			'local'		=> self::$_local_root . 	$folder_path,
-			'remote'	=> self::$_remote_root . 	$folder_path,
-			'relative'	=> $folder_path,
-			'confirm'	=> (boolean) $confirm
-		);
-	}
-
 	public static function run() {
 
 		// if a command is provided and is incorrect, or if no command is provided
@@ -157,6 +138,10 @@ class Console {
 			// the arguments seem ok
 			else {
 
+				// we have a valid command, we can start working
+				self::defineProjectRootPath();
+
+				// depending on the command
 				switch($command) {
 
 					case 'clean-cache':
@@ -165,7 +150,16 @@ class Console {
 
 					case 'sync':
 
+						if(in_array($_SERVER['argv'][2], ['up','down'])) {
 
+							self::syncCommand($_SERVER['argv'][2]);
+
+						}
+						else {
+
+							self::help();
+
+						}
 
 					break;
 
@@ -226,8 +220,8 @@ class Console {
 
 	}
 
-	private static function help() {
-		
+	private static function art() {
+
 		Console\Format::line(
 			"    _           _           \n".
 			"   |_) _  |   _|_ _  ._     \n".
@@ -236,6 +230,13 @@ class Console {
 			'cyan',
 			null
 		);
+
+	}
+
+	private static function help() {
+		
+		// greatings
+		self::art();
 
 		// main usage
 		Console\Format::line('Usage' , 'white', null, ['bold']);
@@ -313,17 +314,19 @@ class Console {
 		}
 
 	}
-/*
-	private static function syncCommand() {
 
+	private static function syncCommand(string $direction) {
+
+		// greatings
+		self::art();
 
 		// read the configuration file
-		$full_ini = parse_ini_file(__DIR__.'/../../../../Config/Config.ini', true);
+		$full_ini = parse_ini_file(self::$_root_path.'Private/Config/Config.ini', true);
 
 		// if our section doesn't exist
 		if(!array_key_exists('sync', $full_ini)) {
 			// we can't proceed
-			Throw new Exception('Missing [sync] section in Config.ini');
+			return Console\Format::block('Missing [sync] section in Config.ini','red');
 		}
 
 		// if any or the required configuration is missing
@@ -334,28 +337,30 @@ class Console {
 			!isset($full_ini['sync']['remote_path']) || 
 			!isset($full_ini['sync']['local_path'])) {
 			// we can't proceed
-			Throw new Exception('Missing configuration in the [sync] section of Config.ini');
+			return Console\Format::block('Missing key=value in the [sync] section of Config.ini','red');
 		}
 
-		// set the port
-		self::$_remote_port 	= $full_ini['sync']['remote_port'];
-		// set the user
-		self::$_remote_user 	= $full_ini['sync']['remote_user'];
-		// set the server
-		self::$_remote_server 	= $full_ini['sync']['remote_host'];
 		// set the local root
-		self::$_local_root 		= '/' . trim($full_ini['sync']['local_path'], '/') . '/';
+		$full_ini['sync']['local_path'] 	= '/' . trim($full_ini['sync']['local_path'], '/') . '/';
 		// set the remote root
-		self::$_remote_root 	= '/' . trim($full_ini['sync']['remote_path'], '/') . '/';
+		$full_ini['sync']['remote_path'] 	= '/' . trim($full_ini['sync']['remote_path'], '/') . '/';
 		// set the options and port
-		self::$_rsync_options 	= str_replace('_port_', $full_ini['sync']['remote_port'], self::$_rsync_options);
+		self::$_commands['sync']['configs']['rsync_options']	= str_replace('_port_', $full_ini['sync']['remote_port'], self::$_commands['sync']['configs']['rsync_options']);
 
 		// folder to sync without confirmation
 		if(isset($full_ini['sync']['always_sync_folders']) && is_array($full_ini['sync']['always_sync_folders'])) {
 			// for each of these folders
 			foreach($full_ini['sync']['always_sync_folders'] as $folder) {
 				// add them to the pool
-				self::folder($folder, false);
+				// set the folder name
+				$folder_path = trim($folder, '/') . '/';
+				// spool the folder
+				self::$_commands['sync']['configs']['folders'][$folder_path] = array(
+					'local'		=> $full_ini['sync']['local_path'] . 	$folder_path,
+					'remote'	=> $full_ini['sync']['remote_path'] . 	$folder_path,
+					'relative'	=> $folder_path,
+					'confirm'	=> false
+				);
 			}
 
 		}
@@ -363,35 +368,89 @@ class Console {
 		if(isset($full_ini['sync']['ask_sync_folders']) && is_array($full_ini['sync']['ask_sync_folders'])) {
 			// for each of these folders
 			foreach($full_ini['sync']['ask_sync_folders'] as $folder) {
-				// add them to the pool
-				self::folder($folder, true);
+				// set the folder name
+				$folder_path = trim($folder, '/') . '/';
+				// spool the folder
+				self::$_commands['sync']['configs']['folders'][$folder_path] = array(
+					'local'		=> $full_ini['sync']['local_path'] . 	$folder_path,
+					'remote'	=> $full_ini['sync']['remote_path'] . 	$folder_path,
+					'relative'	=> $folder_path,
+					'confirm'	=> true
+				);
 			}
 
 		}
 
-		// assign the source and destination depending on the direction
-		$source 		= $_SERVER['argv'][1] == 'up' ? 
-			self::$_local_root : 
-			self::$_remote_user . '@' . self::$_remote_server . ':' . self::$_remote_root;
-		$destination 	= $_SERVER['argv'][1] == 'up' ? 
-			self::$_remote_user . '@' . self::$_remote_server . ':' . self::$_remote_root : 
-			self::$_local_root;
-		
-		// skip a line
-		echo "\n";
+		if($direction == 'up') {
+			// pretty introduction
+			Console\Format::line('  Direction is UP', 'red', null, ['bold']);
+			Console\Format::line('  Your project will be uploaded to production', 'red', null, ['italic']);
+			Console\Format::line('  ___________________________________________', 'red', null, ['italic']);
+			Console\Format::line('');
+			Console\Format::line('  127.0.0.1:'.$full_ini['sync']['local_path'].' -- >>> -- '.$full_ini['sync']['remote_host'].':'.$full_ini['sync']['remote_path'] , 'white');
 
-		// confirm the direction and the source/destination
-		echo "  Direction is " . self::COLOR_RED . strtoupper($_SERVER['argv'][1]) .self::COLOR_NORMAL. " !\n";
-		echo "  From --> {$source} \n";
-		echo "  To ----> {$destination} \n";
-		echo "  Port ----> ".self::$_remote_port." \n\n";
+			Console\Format::line('');
+			Console\Format::line('  Are you sure ?', 'white', null, ['bold']);
+			//Console\Format::line('  Type strictly "UP" to confirm', 'white', null, ['italic']);
+			$confirm = readline('  Type UP to confirm ');
+			if($confirm != 'UP') {
 
-		// ask for a confirmation
-		self::block('Are you okay with this ?', self::COLOR_RED_NEGATIVE);
-		// the confirm itself
-		$confirm = readline("  Type strictly 'YES' to confirm : ");
+				Console\Format::line('');
+				return Console\Format::line('  Cancelled', 'red', null);
 
-		echo "\n";
+			}
+
+			foreach(self::$_commands['sync']['configs']['folders'] as $folder => $more) {
+
+				Console\Format::line('  > '.$folder, 'green', null);
+
+			}
+
+			// skip a line
+			Console\Format::line('');
+
+		}
+		else {
+			// pretty introduction
+			Console\Format::line('  Direction is DOWN', 'red', null, ['bold']);
+			Console\Format::line('  Your project will be downloaded locally', 'red', null, ['italic']);
+			Console\Format::line('  _______________________________________', 'red', null, ['italic']);
+			Console\Format::line('');
+			Console\Format::line('  127.0.0.1:'.$full_ini['sync']['local_path'].' -- <<< -- '.$full_ini['sync']['remote_user'].'@'.$full_ini['sync']['remote_host'].':'.$full_ini['sync']['remote_path'] , 'white');
+
+			Console\Format::line('');
+			Console\Format::line('  Are you sure ?', 'white', null, ['bold']);
+			//Console\Format::line('  Type strictly "DOWN" to confirm', 'white', null, ['italic']);
+			$confirm = readline('  Type DOWN to confirm ');
+
+			if($confirm != 'DOWN') {
+
+				Console\Format::line('');
+				return Console\Format::line('  Cancelled.', 'red', null);
+
+			}
+
+			foreach(self::$_commands['sync']['configs']['folders'] as $folder => $more) {
+
+				Console\Format::line('  < '.$folder, 'green', null);
+
+			}
+
+			// skip a line
+			Console\Format::line('');
+
+		}
+
+	}
+
+	private static function defineProjectRootPath() {
+
+		// define the project root path so that we can work more easily
+		self::$_root_path = realpath(__DIR__.'/../../../../../../').'/';
+
+	}
+/*
+	private static function syncCommand() {
 
 		// if we did not confirm
 		if($confirm != 'YES') {
