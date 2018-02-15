@@ -1,0 +1,11 @@
+#!/usr/bin/env php
+<?php
+
+// include composer's autoloader
+require(__DIR__.'/../../../../Vendor/autoload.php');
+
+// run the console
+Polyfony\Console::run();
+
+
+?>

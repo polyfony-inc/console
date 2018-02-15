@@ -15,5 +15,10 @@
     },
     "bin": [
         "bin/Console"
-    ]
+    ],
+    "autoload": {
+        "psr-4": {
+            "Polyfony\\": "src/Polyfony"
+        }
+    }
 }
