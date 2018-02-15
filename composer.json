@@ -1,0 +1,19 @@
+{
+    "name": "polyfony-inc/console",
+    "description": "CLI helper to use Polyfony",
+    "keywords": ["CLI", "PHP", "Helper", "Console", "Polyfony"],
+    "type": "library",
+    "license": "GPL-3.0",
+    "authors": [
+        {
+            "name": "AnnoyingTechnology"
+        }
+    ],
+    "require":{
+        "php":">=7.1.0",
+        "polyfony-inc/polyfony": "*"
+    },
+    "bin": [
+        "bin/Console"
+    ]
+}
