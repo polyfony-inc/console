@@ -5,24 +5,17 @@ namespace Polyfony;
 // the class itself
 class Console {
 
-	// color for CLI prettiness
-	const COLOR_NORMAL 			= "\033[0m";
-	const COLOR_RED 			= "\033[0;31m";
-	const COLOR_RED_NEGATIVE 	= "\033[41m";
-	const COLOR_GREEN 			= "\033[0;32m";
-	const COLOR_GREEN_NEGATIVE 	= "\033[0;30m\033[42m";
-
 	// list of available command, syntax, configs, and usage
 	protected static $_commands 		= [
 		'help'			=>[
 			'usage'			=>'Console help',
-			'description'	=>'Shows the available commands'
+			'description'	=>'Shows this help'
 		],
 		'sync'					=>[
 			// usage for that command
 			'usage'			=>'Console sync [up/down]',
 			// description for that command
-			'description'	=>'Synchronizes your project from or to a remote server thru SSH',
+			'description'	=>'Synchronizes your project from or to a remote server via SSH',
 			// mapping of cli arguments to their name
 			'arguments'		=>[
 				0	=>'Direction'
@@ -55,29 +48,32 @@ class Console {
 		],
 		'generate-bundle'		=>[
 			'usage'			=>'Console generate-bundle [bundle-name]',
-			'description'	=>'Generate a bundle with full CRUD capabilities based on all the tables present in the database',
+			'description'	=>'Generate a bundle with full CRUD capabilities based on current database tables',
 			'arguments'		=>[
 				0	=>'Bundle'
 			]
 		],
 		'generate-models'		=>[
 			'usage'			=>'Console generate-models',
-			'description'	=>'Generates all the Private/Models/{Table} based on all the tables present in the database'
+			'description'	=>'Generates all the Private/Models/{Table} based on current database tables'
 		],
 		'generate-model'		=>[
 			'usage'			=>'Console generate-model [table-name]',
+			'description'	=>'Generates a model file for a given table name',
 			'arguments'		=>[
 				0	=>'Table'
 			]
 		],
 		'generate-controllers'	=>[
 			'usage'			=>'Console generate-controllers [bundle-name]',
+			'description'	=>'Generates all controllers in a bundle based on current database tables',
 			'arguments'		=>[
 				0	=>'Bundle'
 			]
 		],
 		'generate-controller'	=>[
 			'usage'			=>'Console generate-controller [table-name] [bundle-name]',
+			'description'	=>'Generates a controller for a given table name',
 			'arguments'		=>[
 				0	=>'Table',
 				1	=>'Bundle'
@@ -85,6 +81,7 @@ class Console {
 		],
 		'generate-views'		=>[
 			'usage'			=>'Console generate-views [table-name] [bundle-name]',
+			'description'	=>'Generates all views for a given table name',
 			'arguments'		=>[
 				0	=>'Table',
 				1	=>'Bundle'
@@ -92,6 +89,7 @@ class Console {
 		],
 		'generate-view'			=>[
 			'usage'			=>'Console generate-view [index/edit/delete/create] [table-name] [bundle-name]',
+			'description'	=>'Generates a view for a given table name and action',
 			'arguments'		=>[
 				0	=>'Action',
 				1	=>'Table',
@@ -119,27 +117,137 @@ class Console {
 		);
 	}
 
-	private static function block($string, $color) {
-		// get the length of the message to show
-		$empty_line =  str_repeat(' ', strlen($string) + 4) . "\n";
-		// first line of the block
-		echo "\n" . $color . $empty_line;
-		// actual message of the block
-		echo "  {$string}  \n";
-		// ending line of the block
-		echo $empty_line . self::COLOR_NORMAL . "\n";
-	}
-
 	public static function run() {
 
-		// if no command is provided incorrect
-		if(!isset($_SERVER['argv'][1]) || !in_array($_SERVER['argv'][1], array('up', 'down'))) {
-			// show an error
-			self::block('Usage Private/Binaries/Sync [up, down]', self::COLOR_RED_NEGATIVE);
+		// if a command is provided and is incorrect, or if no command is provided
+		if(
+			!isset($_SERVER['argv'][1]) || 
+			(isset($_SERVER['argv'][1]) && !array_key_exists($_SERVER['argv'][1], self::$_commands))
+		) {
+			
+			// show the help
+			self::help();
+
 			// stop execution
 			return;
+
 		}
-	
+		// a command is provided and it exists
+		elseif(isset($_SERVER['argv'][1]) && array_key_exists($_SERVER['argv'][1], self::$_commands)) {
+
+			// get the command
+			$command = $_SERVER['argv'][1];
+
+			// get the total number of arguments required by that command
+			$required_arguments_count = isset(self::$_commands[$command]['arguments']) ? count(self::$_commands[$command]['arguments']) : 0;
+
+			// if that command requires parameters and that we don't have enough
+			if($required_arguments_count && $required_arguments_count < (count($_SERVER['argv']) + 1)) {
+
+				// show the usage for that specific command
+				Console\Format::line('Not enough arguments provided' , 'red', null, []);
+
+				// show that command's info
+				Console\Format::raw('  '.self::$_commands[$command]['usage'] . ' : ', 'green');
+				Console\Format::raw(self::$_commands[$command]['description'], 'white', null, ['italic']);
+				echo "\n";
+
+
+			}
+			// the arguments seem ok
+			else {
+
+				switch($command) {
+
+					case 'clean-cache':
+
+					break;
+
+					case 'sync':
+
+					break;
+
+					case 'check-config':
+
+					break;
+
+					case 'vacuum-database':
+
+					break;
+
+					case 'generate-symlinks':
+
+					break;
+
+					case 'generate-bundle':
+
+					break;
+
+					case 'generate-controllers':
+
+					break;
+
+					case 'generate-controller':
+
+					break;
+
+					case 'generate-models':
+
+					break;
+
+					case 'generate-model':
+
+					break;
+
+					case 'generate-views':
+
+					break;
+
+					case 'generate-view':
+
+					break;
+
+					case 'help':
+					default:
+
+					self::help();
+
+					break;
+
+				}
+
+			}
+
+		}
+
+	}
+
+	private static function help() {
+		
+		Console\Format::line(
+			"    _           _           \n".
+			"   |_) _  |   _|_ _  ._     \n".
+			"   |  (_) | \/ | (_) | | \/ \n".
+			"            /            /  \n",
+			'cyan',
+			null
+		);
+
+		// main usage
+		Console\Format::line('Available commands' , 'white', null, ['bold']);
+
+		// build the list of available commands
+		foreach(self::$_commands as $command => $infos) {
+
+			// show that command's info
+			Console\Format::raw('  '. str_pad($command,28,' '), 'green');
+			Console\Format::raw($infos['description'], 'white', null, ['italic']);
+			echo "\n";
+		}
+
+		// skip a line
+		Console\Format::line('');
+
 	}
 /*
 	private static function syncCommand() {
@@ -273,10 +381,10 @@ class Console {
 		self::block('Sync is complete !', self::COLOR_GREEN_NEGATIVE);
 
 	}
-
+*/
 
 }
-*/
+
 /*
 
 // has error
