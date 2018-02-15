@@ -1,4 +1,12 @@
-## Console
+# Console
+
+* Generating publics symlinks to access assets stored in the bundles
+
+![Demo video](https://github.com/polyfony-inc/console/blob/master/doc/generate-symlinks.gif)
+
+* Synchronizing your Polyfony project to/form a remote production server
+
+![Demo video](https://github.com/polyfony-inc/console/blob/master/doc/sync.gif)
 
 ```
 projet-directory$ Private/Binaries/Console 
