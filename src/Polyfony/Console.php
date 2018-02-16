@@ -1,5 +1,13 @@
 <?php
 
+/*
+ * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ * Don't look at the source code of this class
+ *  It is utterly disgusting, vomit may occur
+ * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ *
+ */
+
 namespace Polyfony;
 
 // the class itself
@@ -21,7 +29,7 @@ class Console {
 			'description'	=>'Synchronizes your project from or to a remote server via SSH',
 			// mapping of cli arguments to their name
 			'arguments'		=>[
-				0	=>'Direction'
+				'Direction'
 			],
 			// configs element for that command
 			'configs'=>[
@@ -45,11 +53,22 @@ class Console {
 			'usage'			=>'Console generate-syminks',
 			'description'	=>'Generates symlinks from Private/Bundles/{$1}/Assets/{$2} to Public/Assets/{$2}/{$1}'
 		],
+		'run-tests'		=>[
+			'usage'			=>'Console run-tests',
+			'description'	=>'Runs all available tests in Private/Tests/'
+		],
+		'run-test'		=>[
+			'usage'			=>'Console run-test [test-name]',
+			'description'	=>'Runs a specific test',
+			'arguments'		=>[
+				'Test'
+			]
+		],
 		'generate-bundle'		=>[
 			'usage'			=>'Console generate-bundle [bundle-name]',
 			'description'	=>'Generate a bundle with full CRUD capabilities based on current database tables',
 			'arguments'		=>[
-				0	=>'Bundle'
+				'Bundle'
 			]
 		],
 		'generate-models'		=>[
@@ -60,39 +79,39 @@ class Console {
 			'usage'			=>'Console generate-model [table-name]',
 			'description'	=>'Generates a model file for a given table name',
 			'arguments'		=>[
-				0	=>'Table'
+				'Table'
 			]
 		],
 		'generate-controllers'	=>[
 			'usage'			=>'Console generate-controllers [bundle-name]',
 			'description'	=>'Generates all controllers in a bundle based on current database tables',
 			'arguments'		=>[
-				0	=>'Bundle'
+				'Bundle'
 			]
 		],
 		'generate-controller'	=>[
 			'usage'			=>'Console generate-controller [table-name] [bundle-name]',
 			'description'	=>'Generates a controller for a given table name',
 			'arguments'		=>[
-				0	=>'Table',
-				1	=>'Bundle'
+				'Table',
+				'Bundle'
 			]
 		],
 		'generate-views'		=>[
 			'usage'			=>'Console generate-views [table-name] [bundle-name]',
 			'description'	=>'Generates all views for a given table name',
 			'arguments'		=>[
-				0	=>'Table',
-				1	=>'Bundle'
+				'Table',
+				'Bundle'
 			]
 		],
 		'generate-view'			=>[
 			'usage'			=>'Console generate-view [index/edit/delete/create] [table-name] [bundle-name]',
 			'description'	=>'Generates a view for a given table name and action',
 			'arguments'		=>[
-				0	=>'Action',
-				1	=>'Table',
-				2	=>'Bundle'
+				'Action',
+				'Table',
+				'Bundle'
 			]
 		]
 
@@ -146,6 +165,8 @@ class Console {
 
 					case 'clean-cache':
 
+						self::cleanCacheCommand();
+
 					break;
 
 					case 'sync':
@@ -165,15 +186,27 @@ class Console {
 
 					case 'check-config':
 
+						self::checkConfigCommand();
+
 					break;
 
 					case 'vacuum-database':
+
+						self::vacuumDatabaseCommand();
 
 					break;
 
 					case 'generate-symlinks':
 
 						self::generateSymlinksCommand();
+
+					break;
+
+					case 'run-tests':
+
+					break;
+
+					case 'run-test':
 
 					break;
 
@@ -223,10 +256,10 @@ class Console {
 	private static function art() {
 
 		Console\Format::line(
-			"    _           _           \n".
-			"   |_) _  |   _|_ _  ._     \n".
-			"   |  (_) | \/ | (_) | | \/ \n".
-			"            /            /  \n",
+			"   _           _           \n".
+			"  |_) _  |   _|_ _  ._     \n".
+			"  |  (_) | \/ | (_) | | \/ \n".
+			"           /            /  \n",
 			'cyan',
 			null
 		);
@@ -317,9 +350,6 @@ class Console {
 
 	private static function syncCommand(string $direction) {
 
-		// greatings
-		self::art();
-
 		// read the configuration file
 		$full_ini = parse_ini_file(self::$_root_path.'Private/Config/Config.ini', true);
 
@@ -387,13 +417,13 @@ class Console {
 			Console\Format::line('  Your project will be uploaded to production', 'red', null, ['italic']);
 			Console\Format::line('  ___________________________________________', 'red', null, ['italic']);
 			Console\Format::line('');
-			Console\Format::line('  127.0.0.1:'.$full_ini['sync']['local_path'].' -- >>> -- '.$full_ini['sync']['remote_host'].':'.$full_ini['sync']['remote_path'] , 'white');
+			Console\Format::line('  127.0.0.1:'.$full_ini['sync']['local_path'].' -- >>> -- '.$full_ini['sync']['remote_user'].'@'.$full_ini['sync']['remote_host'].':'.$full_ini['sync']['remote_path'] , 'white');
 
 			Console\Format::line('');
 			Console\Format::line('  Are you sure ?', 'white', null, ['bold']);
 			//Console\Format::line('  Type strictly "UP" to confirm', 'white', null, ['italic']);
-			$confirm = readline('  Type UP to confirm ');
-			if($confirm != 'UP') {
+			$confirm = readline('  Type "up" to confirm ');
+			if($confirm != 'up') {
 
 				Console\Format::line('');
 				return Console\Format::line('  Cancelled', 'red', null);
@@ -402,7 +432,56 @@ class Console {
 
 			foreach(self::$_commands['sync']['configs']['folders'] as $folder => $more) {
 
-				Console\Format::line('  > '.$folder, 'green', null);
+				Console\Format::raw('  > '.str_pad($folder,28,' '), 'green', null);
+
+				// the rsync command for that folder
+				$rsync_command = 'rsync '.self::$_commands['sync']['configs']['rsync_options'].$more['local'].'* '.$full_ini['sync']['remote_user'].'@'.$full_ini['sync']['remote_host'] . ':' . $more['remote'];
+
+				// the mkdir command for that folder
+				$mkdir_command = 'ssh -p '.$full_ini['sync']['remote_port'].' '.$full_ini['sync']['remote_user'].'@'.$full_ini['sync']['remote_host'].' "mkdir -m 0777 -p '.$more['remote'].'"';
+
+				// if the folder doesn't even exist locally
+				if(!is_dir($more['local'])) {
+					// skip to the next
+					continue;
+				}
+
+				if($more['confirm']) {
+					Console\Format::raw(' Really ? [y/(n)] ', 'white', null);
+					$confirm_folder = readline('');
+					if($confirm_folder == 'y') {
+
+						// create the local folder if needed
+						shell_exec($mkdir_command);
+						//Console\Format::line($mkdir_command, null, 'gray');
+
+						// wait to make sure it's done
+						usleep(125);
+
+						// rsync down
+						shell_exec($rsync_command);
+						//Console\Format::line($rsync_command, null, 'gray');
+
+					}
+					else {
+						Console\Format::raw("    └── ignored \n", 'yellow', null);
+					}
+				}
+				else {
+
+					// create the local folder if needed
+					shell_exec($mkdir_command);
+					//Console\Format::line($mkdir_command, null, 'gray');
+
+					// wait to make sure it's done
+					usleep(125);
+
+					// execute
+					shell_exec($rsync_command);
+					//Console\Format::line($rsync_command, null, 'gray');
+
+					Console\Format::raw("\n");
+				}
 
 			}
 
@@ -421,9 +500,9 @@ class Console {
 			Console\Format::line('');
 			Console\Format::line('  Are you sure ?', 'white', null, ['bold']);
 			//Console\Format::line('  Type strictly "DOWN" to confirm', 'white', null, ['italic']);
-			$confirm = readline('  Type DOWN to confirm ');
+			$confirm = readline('  Type "down" to confirm ');
 
-			if($confirm != 'DOWN') {
+			if($confirm != 'down') {
 
 				Console\Format::line('');
 				return Console\Format::line('  Cancelled.', 'red', null);
@@ -432,7 +511,46 @@ class Console {
 
 			foreach(self::$_commands['sync']['configs']['folders'] as $folder => $more) {
 
-				Console\Format::line('  < '.$folder, 'green', null);
+				Console\Format::raw('  < '.str_pad($folder,28,' '), 'green', null);
+
+				$mkdir_command = 'mkdir -m 0777 -p '.$more['local'];
+
+				$rsync_command = 'rsync '.self::$_commands['sync']['configs']['rsync_options'].
+					$full_ini['sync']['remote_user'].'@'.$full_ini['sync']['remote_host'] . ':' . $more['remote'].'* '.$more['local'];
+
+				if($more['confirm']) {
+					Console\Format::raw(' Really ? [y/(n)] ', 'white', null);
+					$confirm_folder = readline('');
+					if($confirm_folder == 'y') {
+
+						shell_exec($mkdir_command);
+					//	Console\Format::line($mkdir_command, null, 'gray');
+
+						// wait to make sure it's done
+						usleep(125);
+
+						shell_exec($rsync_command);
+					//	Console\Format::line($rsync_command, null, 'gray');
+
+					}
+					else {
+						Console\Format::raw("    └── ignored \n", 'yellow', null);
+					}
+				}
+				else {
+
+					shell_exec($mkdir_command);
+				//	Console\Format::line($mkdir_command, null, 'gray');
+
+					// wait to make sure it's done
+					usleep(125);
+
+					shell_exec($rsync_command);
+				//	Console\Format::line($rsync_command, null, 'gray');
+
+					Console\Format::raw("\n");
+				}
+				
 
 			}
 
@@ -449,62 +567,6 @@ class Console {
 		self::$_root_path = realpath(__DIR__.'/../../../../../../').'/';
 
 	}
-/*
-	private static function syncCommand() {
-
-		// if we did not confirm
-		if($confirm != 'YES') {
-			// show a feedback
-			self::block('Cancelled, nothing has been transfered', self::COLOR_RED_NEGATIVE);
-			// stop here
-			exit;
-		}
-
-		// for each folder to sync
-		foreach(self::$_folders as $folder) {
-
-			// if the folder required a confirmation
-			if($folder['confirm']) {
-				// ask for a confirmation
-				self::block("Do you want to sync {$folder['relative']} ?", self::COLOR_RED_NEGATIVE);
-				// the confirm itself
-				$confirm = readline("  Type strictly 'YES' to confirm : ");
-				// if the confirmation is refused
-				if($confirm != 'YES') {
-					// say that we skipped
-					echo "  Skipped folder       | {$folder['relative']}\n\n";
-					// skip
-					continue;
-				}
-			}
-
-			// sync command
-			$rsync_command = 'rsync ' . self::$_rsync_options . ' ' .
-				$source . $folder['relative'] . '* ' . $destination . $folder['relative'];
-
-			// pre create folders command
-			$mkdir_command = $_SERVER['argv'][1] == 'up' ? 
-				'ssh ' . self::$_remote_user . '@' . self::$_remote_server . ' mkdir -p ' . $folder['remote'] : 
-				'mkdir ' . $folder['local'];
-
-			// output a message
-			echo "  Synchronizing        | {$folder['relative']} \n";
-		
-			// if a ssh pre rsync command exists, execute it
-			shell_exec($mkdir_command);
-
-			// actually execute the command
-			shell_exec($rsync_command);
-
-
-
-		}
-
-		// end of script
-		self::block('Sync is complete !', self::COLOR_GREEN_NEGATIVE);
-
-	}
-*/
 
 }
 
