@@ -132,25 +132,50 @@ class __Table__ extends Polyfony\Record {
 	}
 
 	// get the url for that object, depending on the user level
-	public function getUrl($id_level = null) :string {
+	public function getUrl() :string {
 
-		return '';
+		// Polyfony\Router::reverse('route-name', ['id___Table__'=>$this->get('id')]);
 
 	}
 
-	// save the record
-	public function save() :bool {
 
-		// some custom manipulation before saving
-		// ...
+	 //               ___               
+	 //  _ __ _ _ ___/ __| __ ___ _____ 
+	 // | '_ \ '_/ -_)__ \/ _` \ V / -_)
+	 // | .__/_| \___|___/\__,_|\_/\___|
+	 // |_|                             
 
-		//$this->set([
-		//	'modification_date'=>time(),
-		//	'modification_by'=>Polyfony\Security::get('id')
-		//]);
+	public function preSave() {
 
-		// call the parent saver
-		return parent::save();
+		// if the object is new, and we don't have a creation date yet
+		if(!$this->get('created_at')) {
+			// set the initial creation stamping
+			$this->set([
+				'created_at'=>time(),
+				'created_by'=>\Polyfony\Security::get('id')
+			]);
+		}
+		// add the latest modifications stamp
+		return $this->set([
+			'modified_at'=>time(),
+			'modified_by'=>\Polyfony\Security::get('id')
+		]);
+
+	}
+
+	 //               _   ___               
+	 //  _ __  ___ __| |_/ __| __ ___ _____ 
+	 // | '_ \/ _ (_-<  _\__ \/ _` \ V / -_)
+	 // | .__/\___/__/\__|___/\__,_|\_/\___|
+	 // |_|                                 
+
+	public function postSave() {
+
+		// // if we have cached element for this table
+		// if(Polyfony\Cache::has('__Table__')) {
+		// 	// empty cached element of this table
+		// 	Polyfony\Cache::remove('__Table__')
+		// }
 
 	}
 
