@@ -297,7 +297,7 @@ class Console {
 		// pretty introduction
 		Console\Format::block('Generating assets symlinks', 'cyan', null, ['bold']);
 		// define the bundles dir
-		$bundles_dir = realpath(__DIR__.'/../../../../../Bundles/').'/';
+		$bundles_dir = '../Private/Bundles/';
 		// for each bundle
 		foreach(scandir($bundles_dir) as $bundle_name) {
 			// bundle assets folder
@@ -316,7 +316,7 @@ class Console {
 					continue;
 				}
 				// set the root path
-				$assets_root_path = realpath(__DIR__."/../../../../../../Public/Assets")."/{$assets_type}/";
+				$assets_root_path = "Assets"."/{$assets_type}/";
 				// if it doesn't already exist 
 				if(!is_dir($assets_root_path)) {
 					// create the path
@@ -329,12 +329,21 @@ class Console {
 						Console\Format::line('  X Public/Assets/'.$assets_type.'/ (failed)', 'red', null);
 					}
 				}
-				// set the symlink 
+				// remove previous symlink 
 				$assets_symbolic_path = $assets_root_path . $bundle_name;
+				if(is_link($assets_symbolic_path)){
+					if(@unlink($assets_symbolic_path)){
+						Console\Format::line('  - '.$assets_symbolic_path.'/ deleted', 'gray', null);
+					}
+					else {
+						// feedback
+						Console\Format::line('  x '.$assets_symbolic_path.'/ NOT deleted', 'red', null);
+					}
+				}
+				// set the symlink 
 				// if the symlink does not already exists
 				if(!is_link($assets_symbolic_path)) {
-					// create the symlink
-					if(@symlink($bundle_assets_type_dir, $assets_root_path.$bundle_name)) {
+					if(@symlink("../../" . $bundle_assets_type_dir . "/", $assets_root_path.$bundle_name)) {
 						// feedback
 						Console\Format::line('  + Public/Assets/'.$assets_type.'/'.$bundle_name.'/', 'green', null);
 					}
@@ -343,9 +352,12 @@ class Console {
 						Console\Format::line('  X Public/Assets/'.$assets_type.'/'.$bundle_name.'/ (failed)', 'red', null);
 					}
 				}
+				else {
+					// feedback
+					Console\Format::line('  ! symlink : '.$assets_symbolic_path.' (Already exists)', 'cyan', null);
+				}
 			}
 		}
-
 	}
 
 	private static function syncCommand(string $direction) {
