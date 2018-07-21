@@ -580,6 +580,57 @@ class Console {
 
 	}
 
+	private static function cleanCacheCommand() {
+		// current system user running the command
+		$username = getenv('USERNAME') ?: getenv('USER');
+		
+		// Authorized users 
+		$authorized_users = array(
+			'root',		// system user root 
+			// webserver user 
+			'_www'		,	// MacOs
+			'www-data'	,	// Debian/Ubuntu
+			'apache'		// Centos/RedHat Apache
+		);
+
+			
+		// pretty introduction
+		Console\Format::block('Cleaning cache', 'yellow', null, ['bold']);
+		
+		// if user is not in authorized users
+		if( !in_array($username, $authorized_users) ) {
+			
+			Console\Format::line("clean-cache MUST BE RUN AS ROOT or as webserver user !", 'red', null, ['bold']);
+			Console\Format::line("\nTry sudo ../Private/Binaries/Console clean-cache", 'green', null);
+			
+		} else {
+		
+			// define the cache dir
+			$caches_dir = '../Private/Storage/Cache/';
+			// for each cache items
+			foreach(scandir($caches_dir) as $cache_item) {
+				// bundle assets folder
+				$cache_to_be_deleted = $caches_dir . $cache_item ;
+				
+				// if the item must be preserved
+				if(in_array($cache_item, ['.','..','.gitignore'] )) {
+					//Console\Format::line('! ' . $cache_to_be_deleted .' is a system file and should NOT TO BE DELETED', 'cyan', null);
+					continue;
+				} 
+				// if the is a directory
+				if(is_dir($cache_to_be_deleted)) {
+					self::rrmdir($cache_to_be_deleted);
+					continue;
+				} 
+				
+				@unlink($cache_to_be_deleted);
+				Console\Format::line( '- file........deleted : ' . $cache_to_be_deleted, 'red', null);
+			}
+			
+		}
+
+	}
+
 	protected static function rrmdir($path){
 		//Console\Format::block('rrmdir : ' . $path, 'cyan', null, ['bold']);
 		if (is_dir($path)) {
