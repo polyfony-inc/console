@@ -580,6 +580,20 @@ class Console {
 
 	}
 
+	protected static function rrmdir($path){
+		//Console\Format::block('rrmdir : ' . $path, 'cyan', null, ['bold']);
+		if (is_dir($path)) {
+			array_map( "self::rrmdir", glob($path . DIRECTORY_SEPARATOR . '{,.[!.]}*', GLOB_BRACE) );
+
+			//Console\Format::line('! @@@@@@@@[' . $path .'] should BE DELETED', 'RED', null);
+			rmdir($path);
+			Console\Format::line('- directory...deleted : ' . $path, 'red', null);
+		}
+		else {
+			unlink($path);
+			Console\Format::line('- file........deleted : ' . $path .'file deleted', 'red', null);
+		}
+	}
 }
 
 ?>
