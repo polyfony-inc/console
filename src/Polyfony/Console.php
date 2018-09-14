@@ -5,8 +5,6 @@
  * Don't look at the source code of this class
  *  It is utterly disgusting, vomit may occur
  * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
- *  V1.1 - JJL - 2018-09-13
- * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  *
  */
 
@@ -166,8 +164,8 @@ class Console {
 				switch($command) {
 
 					case 'clean-cache':
-						self::notYetAvailable();
-						//self::cleanCacheCommand();
+
+						self::cleanCacheCommand();
 
 					break;
 
@@ -187,14 +185,14 @@ class Console {
 					break;
 
 					case 'check-config':
-						self::notYetAvailable();
-						//self::checkConfigCommand();
+
+						self::checkConfigCommand();
 
 					break;
 
 					case 'vacuum-database':
-						self::notYetAvailable();
-						//self::vacuumDatabaseCommand();
+
+						self::vacuumDatabaseCommand();
 
 					break;
 
@@ -205,47 +203,38 @@ class Console {
 					break;
 
 					case 'run-tests':
-						self::notYetAvailable();
 
 					break;
 
 					case 'run-test':
-						self::notYetAvailable();
 
 					break;
 
 					case 'generate-bundle':
-						self::notYetAvailable();
 
 					break;
 
 					case 'generate-controllers':
-						self::notYetAvailable();
 
 					break;
 
 					case 'generate-controller':
-						self::notYetAvailable();
 
 					break;
 
 					case 'generate-models':
-						self::notYetAvailable();
 
 					break;
 
 					case 'generate-model':
-						self::notYetAvailable();
 
 					break;
 
 					case 'generate-views':
-						self::notYetAvailable();
 
 					break;
 
 					case 'generate-view':
-						self::notYetAvailable();
 
 					break;
 
@@ -263,7 +252,7 @@ class Console {
 		}
 
 	}
-	
+
 	private static function art() {
 
 		Console\Format::line(
@@ -304,47 +293,20 @@ class Console {
 
 	}
 
-	private static function notYetAvailable() {
-		
-		// greatings
-		self::art();
-		// skip a line
-		Console\Format::line('');
-		// message
-		Console\Format::block('This feature is not yet available', 'purple', null, ['bold']);
-		// skip a line
-		Console\Format::line('');
-
-	}
-
 	private static function generateSymlinksCommand() {
 		// pretty introduction
 		Console\Format::block('Generating assets symlinks', 'cyan', null, ['bold']);
 		// define the bundles dir
-		//$bundles_dir = '../Private/Bundles/';
-		$bundles_dir = "Private/Bundles/";
-		if(!is_dir($bundles_dir)){
-			Console\Format::block($bundles_dir . 'is NOT a directory', 'red', null, ['bold']);
-			die();
-		}
-		
+		$bundles_dir = '../Private/Bundles/';
 		// for each bundle
 		foreach(scandir($bundles_dir) as $bundle_name) {
 			// bundle assets folder
 			$bundles_assets_dir = $bundles_dir . $bundle_name .'/Assets/';
-			// display the bundle to process
-			if( !in_array($bundle_name,['.','..','.gitignore'])){
-				Console\Format::line('Processing bundle : ' . $bundle_name , 'cyan', null);
-			}
-			// ignore system files
-			if(in_array($bundle_name,['.','..','.gitignore'])) {
+			// if the is no assets folder in that bundle
+			if(!is_dir($bundles_assets_dir) || in_array($bundle_name,['.','..'])) {
 				continue;
-			}
-			// if there is no assets folder in that bundle
-			if(!is_dir($bundles_assets_dir)) {
-				Console\Format::line('No Assets folder in bundle : ' . $bundle_name , 'cyan', null);
-				continue;
-			}
+			} 
+			Console\Format::line('Bundles/'.$bundle_name, 'white', null, ['bold']);
 			// get assets for that bundle
 			foreach(scandir($bundles_assets_dir) as $assets_type) {
 				// the directory for theses assets in this bundle
@@ -353,15 +315,14 @@ class Console {
 				if(!is_dir($bundle_assets_type_dir) || in_array($assets_type,['.','..'])) {
 					continue;
 				}
-				Console\Format::line('Processing : ' . $bundle_assets_type_dir , 'cyan', null);
 				// set the root path
-				$assets_root_path = "Public/Assets"."/{$assets_type}/";
+				$assets_root_path = "Assets"."/{$assets_type}/";
 				// if it doesn't already exist 
 				if(!is_dir($assets_root_path)) {
 					// create the path
 					if(@mkdir($assets_root_path, 0777, true)) {
 						// feedback
-						Console\Format::line('  + '.$assets_root_path.'/', 'green', null);
+						Console\Format::line('  + Public/Assets/'.$assets_type.'/', 'green', null);
 					}
 					else {
 						// feedback
@@ -382,7 +343,7 @@ class Console {
 				// set the symlink 
 				// if the symlink does not already exists
 				if(!is_link($assets_symbolic_path)) {
-					if(@symlink("../../../" . $bundle_assets_type_dir , $assets_root_path.$bundle_name)) {
+					if(@symlink("../../" . $bundle_assets_type_dir . "/", $assets_root_path.$bundle_name)) {
 						// feedback
 						Console\Format::line('  + Public/Assets/'.$assets_type.'/'.$bundle_name.'/', 'green', null);
 					}
@@ -617,6 +578,63 @@ class Console {
 		// define the project root path so that we can work more easily
 		self::$_root_path = realpath(__DIR__.'/../../../../../../').'/';
 
+	}
+
+	private static function cleanCacheCommand() {
+		// Set error
+		$error = 0;
+		// define the cache dir
+		$caches_dir = '../Private/Storage/Cache/';
+		// for each cache items
+		foreach(scandir($caches_dir) as $cache_item) {
+			// cache item path
+			$cache_to_be_deleted = $caches_dir . $cache_item ;
+			
+			// if the item must be preserved
+			if(in_array($cache_item, ['.','..','.gitignore'] )) {
+				//Console\Format::line('! ' . $cache_to_be_deleted .' is a system file and should NOT TO BE DELETED', 'cyan', null);
+				continue;
+			} 
+			
+			// if the is a directory
+			if(is_dir($cache_to_be_deleted)) {
+				if(is_writable($cache_to_be_deleted)){
+					self::rrmdir($cache_to_be_deleted);
+				} else {
+					Console\Format::line('- directory.... NOT deleted :  ERROR Permission denied ' . $cache_to_be_deleted, 'red', null);
+					$error++;
+				}
+				continue;
+			}
+			
+			// if the item is a file
+			if(is_writable($cache_to_be_deleted)){
+				unlink($cache_to_be_deleted);
+				Console\Format::line( '- file............ deleted : ' . $cache_to_be_deleted, 'green', null);
+			} else {
+				Console\Format::line( '- file......... NOT deleted :  ERROR Permission denied ' . $cache_to_be_deleted, 'red', null);
+				$error++;
+			}	
+		}
+		// if error 
+		if($error){
+			Console\Format::block( "YOUR PERMISSIONS ARE INSUFFICIENT\nTry...\nsudo ../Private/binaries/Console clean-cache" , 'cyan', null);
+		}
+	}
+
+	protected static function rrmdir($path){
+		//Console\Format::block('rrmdir : ' . $path, 'cyan', null, ['bold']);
+		if (is_dir($path)) {
+			array_map( "self::rrmdir", glob($path . DIRECTORY_SEPARATOR . '{,.[!.]}*', GLOB_BRACE) );
+
+			//Console\Format::line('! @@@@@@@@[' . $path .'] should BE DELETED', 'RED', null);
+			rmdir($path);
+			Console\Format::line('- directory...deleted : ' . $path, 'red', null);
+		}
+		else {
+			unlink($path);
+			Console\Format::line('- file........deleted : ' . $path .'file deleted', 'red', null);
+		}
 	}
 }
 
