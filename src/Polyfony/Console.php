@@ -16,6 +16,13 @@ class Console {
 	// the root path of the project
 	protected static $_root_path = '';
 
+	// the cache folders relative to root path
+	protected static $_cache_folders = [
+		'Private/Storage/Cache/',
+		'Private/Storage/Cache/Assets/Js/',
+		'Private/Storage/Cache/Assets/Css/'
+	];
+
 	// list of available command, syntax, configs, and usage
 	protected static $_commands 		= [
 		'help'			=>[
@@ -297,7 +304,7 @@ class Console {
 		// pretty introduction
 		Console\Format::block('Generating assets symlinks', 'cyan', null, ['bold']);
 		// define the bundles dir
-		$bundles_dir = realpath(__DIR__.'/../../../../../Bundles/').'/';
+		$bundles_dir = 'Private/Bundles/';
 		// for each bundle
 		foreach(scandir($bundles_dir) as $bundle_name) {
 			// bundle assets folder
@@ -316,36 +323,37 @@ class Console {
 					continue;
 				}
 				// set the root path
-				$assets_root_path = realpath(__DIR__."/../../../../../../Public/Assets")."/{$assets_type}/";
+				$assets_root_path = "Public/Assets"."/{$assets_type}/";
 				// if it doesn't already exist 
 				if(!is_dir($assets_root_path)) {
 					// create the path
-					if(@mkdir($assets_root_path, 0777, true)) {
+					if(!@mkdir($assets_root_path, 0777, true)) {
 						// feedback
-						Console\Format::line('  + Public/Assets/'.$assets_type.'/', 'green', null);
+						Console\Format::line(' └── X Public/Assets/'.$assets_type.'/', 'red', null);
 					}
-					else {
+				}
+				// remove previous symlink 
+				$assets_symbolic_path = $assets_root_path . $bundle_name;
+				if(is_link($assets_symbolic_path)){
+					if(!@unlink($assets_symbolic_path)){
 						// feedback
-						Console\Format::line('  X Public/Assets/'.$assets_type.'/ (failed)', 'red', null);
+						Console\Format::line('  └── X '.$assets_symbolic_path.'/', 'red', null);
 					}
 				}
 				// set the symlink 
-				$assets_symbolic_path = $assets_root_path . $bundle_name;
 				// if the symlink does not already exists
 				if(!is_link($assets_symbolic_path)) {
-					// create the symlink
-					if(@symlink($bundle_assets_type_dir, $assets_root_path.$bundle_name)) {
+					if(@symlink("../../../" . $bundle_assets_type_dir . "/", $assets_root_path.$bundle_name)) {
 						// feedback
-						Console\Format::line('  + Public/Assets/'.$assets_type.'/'.$bundle_name.'/', 'green', null);
+						Console\Format::line('  └── ✓ Public/Assets/'.$assets_type.'/'.$bundle_name.'/', 'green', null);
 					}
 					else {
 						// feedback
-						Console\Format::line('  X Public/Assets/'.$assets_type.'/'.$bundle_name.'/ (failed)', 'red', null);
+						Console\Format::line('  └── X Public/Assets/'.$assets_type.'/'.$bundle_name.'/', 'red', null);
 					}
 				}
 			}
 		}
-
 	}
 
 	private static function syncCommand(string $direction) {
@@ -556,6 +564,41 @@ class Console {
 
 			// skip a line
 			Console\Format::line('');
+
+		}
+
+	}
+
+	private static function cleanCacheCommand() {
+
+		// pretty introduction
+		Console\Format::block('Cleaning up caches', 'cyan', null, ['bold']);
+		// for each bundle
+		foreach(self::$_cache_folders as $cache_folder) {
+			// absolute cache folder path
+			$absolute_cache_folder_path = self::$_root_path . $cache_folder;
+			// some feedback
+			Console\Format::line(str_replace('Private/Storage','',$cache_folder), 'white', null);
+			// if the cache folder exists
+			if(!file_exists($absolute_cache_folder_path)) { continue; }
+			// scan for cache files
+			foreach(scandir($absolute_cache_folder_path) as $cache_file) {
+				// absolute cache file path
+				$absolute_cache_file_path = $absolute_cache_folder_path . $cache_file;
+				// folder and non-deletable item are skipped
+				if(
+					is_dir($absolute_cache_file_path) || 
+					in_array($cache_file,['.','..','.gitignore'])
+				) { continue; }
+				// is a file that is deletable in term of write access
+				is_writable($absolute_cache_file_path) && 
+				// deleting went well
+				@unlink($absolute_cache_file_path) ?
+					// feedback 
+					Console\Format::line('  └── ✓ '.$cache_file, 'green', null) : 
+					Console\Format::line('  └── X '.$cache_file, 'red', null);
+
+			}		
 
 		}
 
