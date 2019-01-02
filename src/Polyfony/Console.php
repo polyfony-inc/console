@@ -31,12 +31,13 @@ class Console {
 		],
 		'sync'					=>[
 			// usage for that command
-			'usage'			=>'Console sync [up/down]',
+			'usage'			=>'Console sync [up/down] [cleancache:yes/no]',
 			// description for that command
-			'description'	=>'Synchronizes your project from or to a remote server via SSH',
+			'description'	=>'Synchronizes your project from or to a remote server via SSH and cleans its remote cache',
 			// mapping of cli arguments to their name
 			'arguments'		=>[
-				'Direction'
+				'Direction',
+				'CleanCache'
 			],
 			// configs element for that command
 			'configs'=>[
@@ -55,6 +56,10 @@ class Console {
 		'clean-cache'			=>[
 			'usage'			=>'Console clean-cache',
 			'description'	=>'Empties the Private/Storage/Cache folder and it subdirectories'
+		],
+		'clean-remote-cache'	=>[
+			'usage'			=>'Console clean-remote-cache',
+			'description'	=>'Empties the Private/Storage/Cache folder and it subdirectories on the remote server'
 		],
 		'generate-symlinks'		=>[
 			'usage'			=>'Console generate-syminks',
@@ -187,12 +192,26 @@ class Console {
 
 					break;
 
+					case 'clean-remote-cache':
+
+						self::cleanRemoteCacheCommand();
+
+					break;
+
 					case 'sync':
 
-						// if the direction is valid
-						if(in_array($_SERVER['argv'][2], ['up','down'])) {
-							// actually sunc
-							self::syncCommand($_SERVER['argv'][2]);
+						// if the direction is valid and cache cleaning if valid
+						if(
+							in_array($_SERVER['argv'][2], ['up','down']) && 
+							in_array($_SERVER['argv'][3], ['yes','no'])
+						) {
+							// actually sync
+							self::syncCommand(
+								// pass the direction
+								$_SERVER['argv'][2], 
+								// pass the cache cleaning option
+								$_SERVER['argv'][3]
+							);
 						}
 						// the direction is invalid
 						else {
@@ -405,7 +424,10 @@ class Console {
 		}
 	}
 
-	private static function syncCommand(string $direction) {
+	private static function syncCommand(
+		string $direction, 
+		string $clean_cache
+	) {
 
 		// read the configuration file
 		$full_ini = parse_ini_file(self::$_root_path.'Private/Config/Config.ini', true);
@@ -586,6 +608,12 @@ class Console {
 
 			}
 
+			// if we want to clean the cache
+			if($clean_cache == 'yes') {
+				// now clean the cache
+				self::cleanRemoteCacheCommand();
+			}
+			
 			// skip a line
 			Console\Format::line('');
 
@@ -687,6 +715,43 @@ class Console {
 			// skip a line
 			Console\Format::line('');
 		}
+
+	}
+
+	private static function cleanRemoteCacheCommand() {
+
+
+		// read the configuration file
+		$full_ini = parse_ini_file(self::$_root_path.'Private/Config/Config.ini', true);
+
+		// if our section doesn't exist
+		if(!array_key_exists('sync', $full_ini)) {
+			// we can't proceed
+			return Console\Format::block('Missing [sync] section in Config.ini','red');
+		}
+
+		// if any or the required configuration is missing
+		if(
+			!isset($full_ini['sync']['remote_host']) || 
+			!isset($full_ini['sync']['remote_port']) || 
+			!isset($full_ini['sync']['remote_user']) || 
+			!isset($full_ini['sync']['remote_path']) || 
+			!isset($full_ini['sync']['local_path'])) {
+			// we can't proceed
+			return Console\Format::block(
+				'Missing key=value in the [sync] section of Config.ini',
+				'red'
+			);
+		}
+
+		// the remote cleaning command for that folder
+		$cleaning_up_command = 
+			'ssh -p '.$full_ini['sync']['remote_port'].' '.$full_ini['sync']['remote_user'].'@'.
+			$full_ini['sync']['remote_host'].' "cd '.$full_ini['sync']['remote_path'].
+			' && Private/Binaries/Console clean-cache"';
+		
+		// execute it and directly show the feedback
+		echo shell_exec($cleaning_up_command);
 
 	}
 
