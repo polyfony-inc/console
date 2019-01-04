@@ -45,6 +45,19 @@ class Console {
 				'folders'		=>[]
 			]
 		],
+		'backup-database'		=>[
+			'usage'			=>'Console backup-database [dev/prod]',
+			'description'	=>'Creates a compressed copy of the local database (you must specify the current environment)',
+			// mapping of cli arguments to their name
+			'arguments'		=>[
+				'Where'
+			],
+			// configs element for that command
+			'configs'=>[
+				'create_archive_folder_command'=>'mkdir -p Private/Storage/Data/Backups/Database/',
+				'archive_command'		=>'tar -cJf __destination__ __relative_database_path__ > /dev/null'
+			]
+		],
 		'check-config'			=>[
 			'usage'			=>'Console check-config',
 			'description'	=>'Checks if the configuration of the framework is optimal'
@@ -167,7 +180,7 @@ class Console {
 			) {
 
 				// show the usage for that specific command
-				Console\Format::line('Not enough arguments provided' , 'red', null, []);
+				Console\Format::line('  Not enough arguments provided' , 'red', null, ['bold']);
 
 				// show that command's info
 				Console\Format::raw('  '.self::$_commands[$command]['usage'] . ' : ', 'green');
@@ -192,9 +205,31 @@ class Console {
 
 					break;
 
+					// this should be renamed to clean-cache 
+					// and local/remote should become a parameter
 					case 'clean-remote-cache':
 
 						self::cleanRemoteCacheCommand();
+
+					break;
+
+					case 'backup-database':
+
+						// if the direction is valid and cache cleaning if valid
+						if(
+							in_array($_SERVER['argv'][2], ['dev','prod'])
+						) {
+							// actually backup
+							self::backupDatabaseCommand(
+								// pass the environment
+								$_SERVER['argv'][2]
+							);
+						}
+						// the direction is invalid
+						else {
+							// only show the help
+							self::help();
+						}
 
 					break;
 
@@ -720,7 +755,6 @@ class Console {
 
 	private static function cleanRemoteCacheCommand() {
 
-
 		// read the configuration file
 		$full_ini = parse_ini_file(self::$_root_path.'Private/Config/Config.ini', true);
 
@@ -784,9 +818,78 @@ class Console {
 					Console\Format::line('  └── ✓ '.$cache_file, 'green', null) : 
 					Console\Format::line('  └── X '.$cache_file, 'red', null);
 
-			}		
+			}
 
 		}
+
+	}
+
+	private static function backupDatabaseCommand(
+		string $environment
+	) {
+
+		// read the configuration file
+		$full_ini = array_replace(
+			parse_ini_file(self::$_root_path.'Private/Config/Config.ini', true),
+			parse_ini_file(self::$_root_path.'Private/Config/'.ucfirst($environment).'.ini', true)
+		);
+
+		// pretty introduction
+		Console\Format::block('Backing up the database (SQLite only)', 'cyan', null, ['bold']);
+
+		// database path
+		$database_path = realpath(self::$_root_path . 'Public/'.$full_ini['database']['database']);
+
+		// get the current size
+		$database_original_size = Format::size(filesize($database_path));
+
+		// backup folder creation command
+		Console\Format::line('  ✓ Creating backup folder', 'green', null, []);
+
+		// Creating backups folders
+		shell_exec(self::$_commands['backup-database']['configs']['create_archive_folder_command']);
+
+		// backup destination
+		$backup_destination = 'Private/Storage/Data/Backups/Database/Polyfony-'.date('Y-m-d-H-i').'.sqlite.tar.xz';
+
+		// customize the archive command
+		$archive_command = str_replace(
+			[
+				'__destination__',
+				'__relative_database_path__'
+			], 
+			[
+				$backup_destination,
+				realpath('Public/'.$full_ini['database']['database'])
+			], 
+			self::$_commands['backup-database']['configs']['archive_command']
+		);
+
+		// backup folder creation command
+		Console\Format::line('  ✓ Compressing the database', 'green', null, []);
+
+		// actually archive
+ 		shell_exec($archive_command);
+
+ 		// final feedback
+		Console\Format::block('This backup is ' . Format::size(filesize($backup_destination)), 'black', 'yellow', []);
+
+		// cleanup the terminal
+		Console\Format::line(' ','white','black',[]);
+
+	}
+
+	private static function checkConfigCommand() {
+
+		// pretty introduction
+		Console\Format::block('Sorry, not yet implemented', 'purple', null, []);
+
+	}
+
+	private static function vacuumDatabaseCommand() {
+
+		// pretty introduction
+		Console\Format::block('Sorry, not yet implemented', 'purple', null, []);
 
 	}
 
