@@ -866,7 +866,7 @@ class Console {
 		);
 
 		// backup folder creation command
-		Console\Format::line('  ✓ Compressing the database', 'green', null, []);
+		Console\Format::line('  ✓ Compressing the database (This can take a while...)', 'green', null, []);
 
 		// actually archive
  		shell_exec($archive_command);
