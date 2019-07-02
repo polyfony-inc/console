@@ -6,9 +6,27 @@
  *
  */
 
-use Polyfony as pf;
+// framework aliases
+use Polyfony\Controller as Controller;
+use Polyfony\Exception as Exception;
+use Polyfony\Security as Security;
+use Polyfony\Response as Response;
+use Polyfony\Request as Request;
+use Polyfony\Config as Config;
+use Polyfony\Keys as Keys;
 
-class __Table__Controller extends Polyfony\Controller {
+use Polyfony\Form\Token as Token;
+use Polyfony\Form\Captcha as Captcha;
+
+// models aliases
+use Models\__Table__ as Table;
+
+// vendors aliases
+use Bootstrap\Alert\Success as OK;
+use Bootstrap\Alert\Failure as KO;
+use Bootstrap\Alert as Alert;
+
+class __Table__Controller extends Controller {
 
 	 //  _          __             
 	 // | |__  ___ / _|___ _ _ ___ 
@@ -18,19 +36,17 @@ class __Table__Controller extends Polyfony\Controller {
 	public function preAction() {
 
 		// Enforce a global security
-		// Polyfony\Security::enforce('control-__Table__', 1);
+		// Security::enforce('control-__table__', 1);
 
-		// Polyfony\Response::set([
+		// Response\HTML::set([
 		// 	'metas'		=>[
 		// 		'title'			=>'',
 		// 		'description'	=>'',
-		//		'robots'		=>''
+		// 		'robots'		=>''
 		// 	],
-		// 	'assets'	=>[
-		// 		'css'	=>[
-		// 		],
-		// 		'js'	=>[
-		// 		]
+		// 	'links'	=>[
+		// 	],
+		// 	'scripts'=>[
 		// 	]
 		// ]);
 
@@ -48,34 +64,11 @@ class __Table__Controller extends Polyfony\Controller {
 	public function indexAction() {
 
 		// request has been posted
-		if(Polyfony\Request::isPost()) {
+		$this->__Table__ = Request::isPost() ? 
+			__Table__::search(
+				Request::post('__Table__')
+			) : [];
 		
-			// search in the table
-			$this->__Table__ = Models\__Table__::search(
-				Polyfony\Request::post('__Table__')
-			);
-
-			// reusults found ?
-			$this->__Table__ ? 
-
-				// save a success alert to the flashbag
-				new Bootstrap\Alert([
-					'class'		=>'success',
-					'message'	=>'Found {count($this->__Table__)} {$this->__Table__}'
-				])->save() : 
-
-				// save a warning alert to the flashbag
-				new Bootstrap\Alert([
-					'class'		=>'warning',
-					'message'	=>'No {$this->__Table__} found'
-				])->save();
-
-		}
-		else {
-			// empty result set
-			$this->__Table__ = [];
-		}
-
 		// the list view
 		$this->view('__Table__/Index');
 
@@ -89,39 +82,31 @@ class __Table__Controller extends Polyfony\Controller {
 	public function editAction() {
 
 		// enforce security
-		// Polyfony\Security::enforce('edit-__Table__', 1);
+		// Security::enforce('edit-__table__', 1);
 
 		// get that __Singular__
-		$this->__Singular__ = new Models\__Table__(Polyfony\Request::post('id'));
+		$this->__Singular__ = new __Table__(Request::post('id'));
 
 		// request has been posted
-		if(Polyfony\Request::isPost()) {
+		if(Request::isPost()) {
 			
 			// enforce security
-			// Polyfony\Security::enforce('edit-post-__Table__', 1);
+			// Security::enforce('edit-post-__table__', 1);
 
 			// enforce the CSRF protection
-			Polyfony\Form\Token::enforce();
+			Token::enforce();
 
 			// record has been updated/saved ?
 			$this
 				->__Singular__
-				->set(Polyfony\Request::post('__Table__'))
+				->set(Request::post('__Table__'))
 				->save() ? 
-
-					// save a success alert to the flashbag
-					new Bootstrap\Alert([
-						'class'		=>'success',
-						'message'	=>'The {$this->__Table__} has been saved'
-					])->save() : 
-
-					// save a warning alert to the flashbag
-					new Bootstrap\Alert([
-						'class'		=>'danger',
-						'message'	=>'Error during the saving of the {__Table__}'
-					])->save();
+					(new OK) : 
+					(new KO);
 
 			// redirect to the previous page
+			Response::previous();
+
 		}
 
 		$this->view('__Table__/Edit');
@@ -136,35 +121,26 @@ class __Table__Controller extends Polyfony\Controller {
 	public function deleteAction() {
 
 		// enforce security
-		// Polyfony\Security::enforce('delete-__Table__', 1);
+		// Security::enforce('delete-__table__', 1);
 
 		// get that __Singular__
-		$this->__Singular__ = new Models\__Table__(Polyfony\Request::post('id'));
+		$this->__Singular__ = new __Table__(Request::post('id'));
 
 		// request has been posted
-		if(Polyfony\Request::isPost()) {
+		if(Request::isPost()) {
 			
 			// enforce the CSRF protection
-			Polyfony\Form\Token::enforce();
+			Token::enforce();
 
 			// record has been deleted ?
 			$this
 				->__Singular__
 				->delete() ? 
-
-					// save a success alert to the flashbag
-					new Bootstrap\Alert([
-						'class'		=>'success',
-						'message'	=>'{$this->__Table__} has been deleted'
-					])->save() : 
-
-					// save a warning alert to the flashbag
-					new Bootstrap\Alert([
-						'class'		=>'danger',
-						'message'	=>'Error while deleting {__Table__}'
-					])->save();
+					(new OK) : 
+					(new KO);
 
 			// redirect somewhere else
+			Response::previous();
 
 		}
 		else {
@@ -184,9 +160,34 @@ class __Table__Controller extends Polyfony\Controller {
 	public function createAction() {
 
 		// enforce security
-		// Polyfony\Security::enforce('create-__Table__', 1);
+		// Security::enforce('create-__table__', 1);
 
-		$this->view('__Table__/Create');
+		// get that __Singular__
+		$this->__Singular__ = new __Table__;
+
+		// request has been posted
+		if(Request::isPost()) {
+			
+			// enforce the CSRF protection
+			Token::enforce();
+
+			// record has been updated/saved ?
+			$this
+				->__Singular__
+				->set(Request::post('__Table__'))
+				->save() ? 
+					(new OK) : 
+					(new KO);
+
+			// redirect to the previous page
+			Response::setRedirect(
+				$this->__Singular__->getUrl()
+			);
+			Response::render();
+
+		}
+
+		$this->view('__Table__/Edit');
 
 	}
 

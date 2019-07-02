@@ -7,22 +7,29 @@
  */
 
 namespace Models;
-use Polyfony as pf;
 
-class __Table__ extends Polyfony\Record {
+use Polyfony\Exception as Exception;
+use Polyfony\Database as Database;
+use Polyfony\Security as Security;
+use Polyfony\Locales as Locales;
+use Polyfony\Element as Element;
+use Polyfony\Config as Config;
+use Polyfony\Record as Record;
+use Polyfony\Router as Router;
+use Polyfony\Cache as Cache;
+use Polyfony\Keys as Keys;
 
-	// a define what columns should not be altered by a ->setSafely($columns_and_values) 
-	const SET_SAFELY_COLUMNS = [
-		'id',
-		'creation_date',
-		'creation_by',
-		'modification_date',
-		'modification_by'
+class __Table__ extends Record {
+
+	// cache duration for the idAsKey method
+	CONST ID_AS_KEY_CACHE_DURATION = 3600*24*30;
+
+	// hard validator
+	const VALIDATORS = [
 	];
 
-	// list of hard validation, to prevent some data types from entering the database
-	const VALIDATORS = [
-		// those only apply to instance methods
+	// cleanup filters
+	const FILTERS = [
 	];
 
 	 /////////////////////////////////////
@@ -36,28 +43,67 @@ class __Table__ extends Polyfony\Record {
                                   
 
 	// return a list with id as a key, mostly usefull for select list
-	public static function idAsKey(array $where = [], bool $allow_cache = false) :array {
+	public static function idAsKey(
+		?array $where = [], 
+		?bool $allow_cache = false
+	) :array {
+
+		// of we have it in the cache
+		if(Cache::has('__Table__.idAsKey')) {
+
+			// retrieve from the cache
+			$id_as_key = Cache::get('__Table__.idAsKey');
+
+		}
+		else {
+
+			$id_as_key = [];
+
+			foreach(
+				self::all() 
+				as $object
+			) {
+
+				$id_as_key[$object->get('id')] = 
+					$object->get('id');
+
+			}
+
+			// put it in the cache
+			Cache::put(
+				'__Table__.idAsKey', 
+				$id_as_key, 
+				true, 
+				self::ID_AS_KEY_CACHE_DURATION
+			);
+
+		}
+
+		return $id_as_key;
 
 	}
 
 	// search in all records
-	public static function search(array $matching=[]) :array {
+	public static function search(
+		array $matching=[]
+	) :array {
 
-		return self::filter(Polyfony\Database::query()
-			->select()
-			->from('__Table__')
-			->whereContains($matching)
-			->execute());
+		return self::filter(
+			self::_select()
+				->select()
+				->whereContains($matching)
+				->execute()
+		);
 
 	}
 
 	// return all records from __Table__ or a subset
-	public static function all(array $where = []) :array {
+	public static function all(
+		?array $where = []
+	) :array {
 
 		// the base query
-		$query = Polyfony\Database::query()
-			->select()
-			->from('__Table__');
+		$query = self::_select();
 
 		// if basic where conditions are provided
 		if($where) {
@@ -66,31 +112,32 @@ class __Table__ extends Polyfony\Record {
 		}
 
 		// execute and filter the query
-		return self::filter($query->execute());
+		return self::filter(
+			$query->execute()
+		);
 
 	}
 
 	// filter the result depending on whatever your want
-	public static function filter(array $__Table__) :array {
-
-		// list of allowed records, that passed thru the filter
-		$allowed_records = [];
+	public static function filter(
+		array $records
+	) :array {
 
 		// for each of the record provided
-		foreach($__Table__ as $__Singular__) {
+		foreach($records as $id_record => $record) {
 
 			// some right are applied here
-			if(true) {
+			if(false) {
 		
-				// allow that record
-				$allowed_records[$__Singular__->get('id')] = $__Singular__; 
+				// remove that record
+				unset($records[$id_record]); 
 		
 			}
 
 		}
 
 		// return the list of allowed records
-		return $allowed_records;
+		return $records;
 
 	}
 
@@ -104,78 +151,39 @@ class __Table__ extends Polyfony\Record {
 	 // |_|_|_\___|\__|_||_\___/\__,_/__/
                                   
 
-	// set columns, but apply some protection
-	public function setSafely(array $columns_and_values) :self {
+	// get the url for that object, depending on the user level
+	public function getUrl(
+		?string $action = 'edit',
+		?int $id_level = 1
+	) :string {
 
-		// for each column to set
-		foreach($columns_and_values as $column => $value) {
-			// make sure that column is not protected
-			if(!in_array(strtolower($column), self::SAFE_SET_COLUMNS)) {
-				// allow to set the value on that column
-				$this->set([$column=>$value]);
-			}
-		}
-
-	}
-
-	// get that column, is a safe way, and with a length limitation
-	public function getColumnName(int $length = 32) :string {
-		// escape html
-		return Polyfony\htmlSafe(
-			// restrict the maximum length
-			Polyfony\Format::truncate(
-				$this->get('ColumnName'),
-				$length
-			)
+		return Router::reverse(
+			'__table__', 
+			[
+				'id'		=>$this->get('id'),
+				'action'	=>$action 
+			]
 		);
 
 	}
 
-	// get the url for that object, depending on the user level
-	public function getUrl() :string {
-
-		// Polyfony\Router::reverse('route-name', ['id___Table__'=>$this->get('id')]);
-
-	}
+	public function save() :bool {
 
 
-	 //               ___               
-	 //  _ __ _ _ ___/ __| __ ___ _____ 
-	 // | '_ \ '_/ -_)__ \/ _` \ V / -_)
-	 // | .__/_| \___|___/\__,_|\_/\___|
-	 // |_|                             
-
-	public function preSave() {
-
-		// if the object is new, and we don't have a creation date yet
-		if(!$this->get('created_at')) {
-			// set the initial creation stamping
-			$this->set([
-				'created_at'=>time(),
-				'created_by'=>\Polyfony\Security::get('id')
-			]);
-		}
-		// add the latest modifications stamp
-		return $this->set([
-			'modified_at'=>time(),
-			'modified_by'=>\Polyfony\Security::get('id')
-		]);
-
-	}
-
-	 //               _   ___               
-	 //  _ __  ___ __| |_/ __| __ ___ _____ 
-	 // | '_ \/ _ (_-<  _\__ \/ _` \ V / -_)
-	 // | .__/\___/__/\__|___/\__,_|\_/\___|
-	 // |_|                                 
-
-	public function postSave() {
-
-		// // if we have cached element for this table
-		// if(Polyfony\Cache::has('__Table__')) {
-		// 	// empty cached element of this table
-		// 	Polyfony\Cache::remove('__Table__')
+		// if(!$this->get('id')) {
+		// 	'created_on'	=>time(),
+		// 	'created_by'	=>Security::get('id')
 		// }
+
+		// $this->set([
+		// 	'modification_date'	=>time(),
+		// 	'modification_by'	=>Security::get('id')
+		// ]);
+
+		// ... code tweaking
+
+		// use the parent saving method
+		return parent::save();
 
 	}
 

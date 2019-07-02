@@ -58,14 +58,14 @@ class Console {
 				'archive_command'		=>'tar -cJf __destination__ __relative_database_path__ > /dev/null'
 			]
 		],
-		'check-config'			=>[
-			'usage'			=>'Console check-config',
-			'description'	=>'Checks if the configuration of the framework is optimal'
-		],
-		'vacuum-database'		=>[
-			'usage'			=>'Console vacuum-database',
-			'description'	=>'Executes a vacuum command on the database to free up space'
-		],
+		//'check-config'			=>[
+		//	'usage'			=>'Console check-config',
+		//	'description'	=>'Checks if the configuration of the framework is optimal'
+		//],
+		//'vacuum-database'		=>[
+		//	'usage'			=>'Console vacuum-database',
+		//	'description'	=>'Executes a vacuum command on the database to free up space'
+		//],
 		'clean-cache'			=>[
 			'usage'			=>'Console clean-cache',
 			'description'	=>'Empties the Private/Storage/Cache folder and it subdirectories'
@@ -78,67 +78,68 @@ class Console {
 			'usage'			=>'Console generate-syminks',
 			'description'	=>'Generates symlinks from Private/Bundles/{$1}/Assets/{$2} to Public/Assets/{$2}/{$1}'
 		],
-		'run-tests'		=>[
-			'usage'			=>'Console run-tests',
-			'description'	=>'Runs all available tests in Private/Tests/'
-		],
-		'run-test'		=>[
-			'usage'			=>'Console run-test [test-name]',
-			'description'	=>'Runs a specific test',
-			'arguments'		=>[
-				'Test'
-			]
-		],
-		'generate-bundle'		=>[
-			'usage'			=>'Console generate-bundle [bundle-name]',
-			'description'	=>'Generate a bundle with full CRUD capabilities based on current database tables',
-			'arguments'		=>[
-				'Bundle'
-			]
-		],
-		'generate-models'		=>[
-			'usage'			=>'Console generate-models',
-			'description'	=>'Generates all the Private/Models/{Table} based on current database tables'
-		],
+		// 'run-tests'		=>[
+		// 	'usage'			=>'Console run-tests',
+		// 	'description'	=>'Runs all available tests in Private/Tests/'
+		// ],
+		// 'run-test'		=>[
+		// 	'usage'			=>'Console run-test [test-name]',
+		// 	'description'	=>'Runs a specific test',
+		// 	'arguments'		=>[
+		// 		'Test'
+		// 	]
+		// ],
+		// 'generate-bundle'		=>[
+		// 	'usage'			=>'Console generate-bundle [bundle-name]',
+		// 	'description'	=>'Generate a bundle with full CRUD capabilities based on current database tables',
+		// 	'arguments'		=>[
+		// 		'Bundle'
+		// 	]
+		// ],
+		// 'generate-models'		=>[
+		// 	'usage'			=>'Console generate-models',
+		// 	'description'	=>'Generates all the Private/Models/{Table} based on current database tables'
+		// ],
 		'generate-model'		=>[
-			'usage'			=>'Console generate-model [table-name]',
+			'usage'			=>'Console generate-model [TableName]',
 			'description'	=>'Generates a model file for a given table name',
 			'arguments'		=>[
 				'Table'
 			]
 		],
-		'generate-controllers'	=>[
-			'usage'			=>'Console generate-controllers [bundle-name]',
-			'description'	=>'Generates all controllers in a bundle based on current database tables',
-			'arguments'		=>[
-				'Bundle'
-			]
-		],
+		// 'generate-controllers'	=>[
+		// 	'usage'			=>'Console generate-controllers [bundle-name]',
+		// 	'description'	=>'Generates all controllers in a bundle based on current database tables',
+		// 	'arguments'		=>[
+		// 		'Bundle'
+		// 	]
+		// ],
 		'generate-controller'	=>[
-			'usage'			=>'Console generate-controller [table-name] [bundle-name]',
+			'usage'			=>'Console generate-controller [BundleName] [TableName] [TableSingularName]',
 			'description'	=>'Generates a controller for a given table name',
 			'arguments'		=>[
+				'Bundle',
 				'Table',
-				'Bundle'
+				'Singular'
 			]
 		],
 		'generate-views'		=>[
-			'usage'			=>'Console generate-views [table-name] [bundle-name]',
+			'usage'			=>'Console generate-views [BundleName] [TableName] [TableSingularName]',
 			'description'	=>'Generates all views for a given table name',
 			'arguments'		=>[
 				'Table',
 				'Bundle'
 			]
 		],
-		'generate-view'			=>[
-			'usage'			=>'Console generate-view [index/edit/delete/create] [table-name] [bundle-name]',
-			'description'	=>'Generates a view for a given table name and action',
-			'arguments'		=>[
-				'Action',
-				'Table',
-				'Bundle'
-			]
-		]
+		// 'generate-view'			=>[
+		// 	'usage'			=>'Console generate-view [index/edit/delete/create] [table-name] [bundle-name]',
+		// 	'description'	=>'Generates a view for a given table name and action',
+		// 	'arguments'		=>[
+		// 		'Action',
+		// 		'Table',
+		// 		'Bundle'
+		// 	]
+		// ]
 
 	];
 
@@ -292,13 +293,126 @@ class Console {
 
 					case 'generate-controller':
 
+						// pretty introduction
+						Console\Format::block(
+							'Generating the ' . $_SERVER['argv'][2] . ' Controller', 
+							'cyan', 
+							null, 
+							['bold']
+						);
+
+						// get the template
+						$template = file_get_contents(
+							self::$_root_path . 
+							'Private/Vendor/polyfony-inc/console/templates/Controller.php'
+						);
+						
+						// customize it
+						$template = str_replace(
+							[
+								'__Table__',
+								'__table__',
+								'__Singular__',
+								'__datetime__'
+							],
+							[
+								$_SERVER['argv'][3],
+								strtolower($_SERVER['argv'][3]),
+								$_SERVER['argv'][4],
+								date('d/m/Y h:i')
+							],
+							$template
+						);
+
+						// the folder containing that controller
+						$controller_root_path = self::$_root_path . 
+							'Private/Bundles/'.$_SERVER['argv'][2].
+							'/Controllers/';
+
+						// if it doesn't exist yet
+						if(!is_dir($controller_root_path)) {
+							// create it
+							mkdir($controller_root_path, 0777, true);
+						}
+
+						$controller_path = $controller_root_path . 
+							$_SERVER['argv'][3].'.php';
+
+						if(file_exists($controller_path)) {
+							// some feedback
+							Console\Format::line('X Controller already exist', 'red', null);
+						}
+						else {
+							// save the file
+							file_put_contents(
+								$controller_path, 
+								$template
+							);
+							// some feedback
+							Console\Format::line('✓ Controller generated', 'green', null);
+						}
+						
 					break;
 
 					case 'generate-models':
 
+						// read the database schema, then proceed to generate all models
+
 					break;
 
 					case 'generate-model':
+
+						// pretty introduction
+						Console\Format::block(
+							'Generating the ' . $_SERVER['argv'][2] . ' Model', 
+							'cyan', 
+							null, 
+							['bold']
+						);
+
+						// get the template
+						$template = file_get_contents(
+							self::$_root_path . 
+							'Private/Vendor/polyfony-inc/console/templates/Model.php'
+						);
+						
+						// set the destination file
+						$destination_path = self::$_root_path . 
+							'Private/Models/'.$_SERVER['argv'][2].'.php';
+
+						// customize it
+						$template = str_replace(
+							[
+								'__Table__',
+								'__table__',
+								'__datetime__'
+							],
+							[
+								$_SERVER['argv'][2],
+								strtolower($_SERVER['argv'][2]),
+								date('d/m/Y h:i')
+							],
+							$template
+						);
+
+						if(file_exists($destination_path)) {
+							// some feedback
+							Console\Format::line('X Model already exist', 'red', null);
+						}
+						else {
+							
+							// save the file
+							file_put_contents(
+								$destination_path, 
+								$template
+							);
+
+							// some feedback
+							Console\Format::line('✓ Model generated', 'green', null);
+
+						}
+
+						
 
 					break;
 
