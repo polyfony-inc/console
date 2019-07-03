@@ -10,6 +10,8 @@
 
 namespace Polyfony;
 
+use Doctrine\Common\Inflector\Inflector;
+
 // the class itself
 class Console {
 
@@ -115,17 +117,31 @@ class Console {
 		// 	]
 		// ],
 		'generate-controller'	=>[
-			'usage'			=>'Console generate-controller [BundleName] [TableName] [TableSingularName]',
+			'usage'			=>'Console generate-controller [BundleName] [TableName]',
 			'description'	=>'Generates a controller for a given table name',
 			'arguments'		=>[
 				'Bundle',
-				'Table',
-				'Singular'
+				'Table'
 			]
 		],
 		'generate-views'		=>[
-			'usage'			=>'Console generate-views [BundleName] [TableName] [TableSingularName]',
+			'usage'			=>'Console generate-views [BundleName] [TableName]',
 			'description'	=>'Generates all views for a given table name',
+			'arguments'		=>[
+				'Table',
+				'Bundle'
+			]
+		],
+		'generate-routes'		=>[
+			'usage'			=>'Console generate-routes [BundleName]',
+			'description'	=>'Generates CRUD routes for all tables in a given bundle',
+			'arguments'		=>[
+				'Bundle'
+			]
+		],
+		'generate-route'		=>[
+			'usage'			=>'Console generate-route [BundleName] [TableName]',
+			'description'	=>'Generates CRUD route given table name and bundle',
 			'arguments'		=>[
 				'Table',
 				'Bundle'
@@ -293,64 +309,10 @@ class Console {
 
 					case 'generate-controller':
 
-						// pretty introduction
-						Console\Format::block(
-							'Generating the ' . $_SERVER['argv'][2] . ' Controller', 
-							'cyan', 
-							null, 
-							['bold']
+						self::generateController(
+							$_SERVER['argv'][2],
+							$_SERVER['argv'][3]
 						);
-
-						// get the template
-						$template = file_get_contents(
-							self::$_root_path . 
-							'Private/Vendor/polyfony-inc/console/templates/Controller.php'
-						);
-						
-						// customize it
-						$template = str_replace(
-							[
-								'__Table__',
-								'__table__',
-								'__Singular__',
-								'__datetime__'
-							],
-							[
-								$_SERVER['argv'][3],
-								strtolower($_SERVER['argv'][3]),
-								$_SERVER['argv'][4],
-								date('d/m/Y h:i')
-							],
-							$template
-						);
-
-						// the folder containing that controller
-						$controller_root_path = self::$_root_path . 
-							'Private/Bundles/'.$_SERVER['argv'][2].
-							'/Controllers/';
-
-						// if it doesn't exist yet
-						if(!is_dir($controller_root_path)) {
-							// create it
-							mkdir($controller_root_path, 0777, true);
-						}
-
-						$controller_path = $controller_root_path . 
-							$_SERVER['argv'][3].'.php';
-
-						if(file_exists($controller_path)) {
-							// some feedback
-							Console\Format::line('X Controller already exist', 'red', null);
-						}
-						else {
-							// save the file
-							file_put_contents(
-								$controller_path, 
-								$template
-							);
-							// some feedback
-							Console\Format::line('✓ Controller generated', 'green', null);
-						}
 						
 					break;
 
@@ -362,61 +324,18 @@ class Console {
 
 					case 'generate-model':
 
-						// pretty introduction
-						Console\Format::block(
-							'Generating the ' . $_SERVER['argv'][2] . ' Model', 
-							'cyan', 
-							null, 
-							['bold']
+						self::generateModel(
+							$_SERVER['argv'][2]
 						);
-
-						// get the template
-						$template = file_get_contents(
-							self::$_root_path . 
-							'Private/Vendor/polyfony-inc/console/templates/Model.php'
-						);
-						
-						// set the destination file
-						$destination_path = self::$_root_path . 
-							'Private/Models/'.$_SERVER['argv'][2].'.php';
-
-						// customize it
-						$template = str_replace(
-							[
-								'__Table__',
-								'__table__',
-								'__datetime__'
-							],
-							[
-								$_SERVER['argv'][2],
-								strtolower($_SERVER['argv'][2]),
-								date('d/m/Y h:i')
-							],
-							$template
-						);
-
-						if(file_exists($destination_path)) {
-							// some feedback
-							Console\Format::line('X Model already exist', 'red', null);
-						}
-						else {
-							
-							// save the file
-							file_put_contents(
-								$destination_path, 
-								$template
-							);
-
-							// some feedback
-							Console\Format::line('✓ Model generated', 'green', null);
-
-						}
-
-						
 
 					break;
 
 					case 'generate-views':
+
+						self::generateViews(
+							$_SERVER['argv'][2],
+							$_SERVER['argv'][3]
+						);
 
 					break;
 
@@ -424,10 +343,23 @@ class Console {
 
 					break;
 
+					case 'generate-routes':
+
+					break;
+
+					case 'generate-route':
+
+						self::generateRoute(
+							$_SERVER['argv'][2],
+							$_SERVER['argv'][3]
+						);
+
+					break;
+
 					case 'help':
 					default:
 
-					self::help();
+						self::help();
 
 					break;
 
@@ -476,6 +408,695 @@ class Console {
 
 		// skip a line
 		Console\Format::line('');
+
+	}
+
+	private static function deduceTableSchema(
+		string $table_name
+	) :array {
+
+		// case conversion
+		$table_name = Inflector::classify(
+			$table_name
+		);
+		// plural conversion
+		$object_singular 	= Inflector::classify(
+			Inflector::singularize(
+				$table_name
+			)
+		);
+		// get a slug version (mostly for routes)
+		$table_slug = str_replace(
+			'_', 
+			'-', 
+			Inflector::tableize($table_name)
+		);
+
+		// read the configuration file
+		$full_ini = array_replace(
+			parse_ini_file(self::$_root_path.'Private/Config/Config.ini', true),
+			parse_ini_file(self::$_root_path.'Private/Config/Dev.ini', true)
+		);
+
+		// get the database path
+		$database_path = realpath(
+			self::$_root_path . 
+			'Public/'.
+			$full_ini['database']['database']
+		);
+
+		$columns = [];
+		$database = new \PDO('sqlite:'.$database_path);
+
+		foreach(
+			$database->query('PRAGMA table_info(  ' . $table_name.' )') 
+			as $column
+		) {
+			
+			$columns[$column['name']]['type'] 		= $column['type'];
+			$columns[$column['name']]['is_select'] 	= false;
+			$columns[$column['name']]['is_date'] 	= false;
+			$columns[$column['name']]['is_numeric']	= false;
+			$columns[$column['name']]['is_disabled']= false;
+			$columns[$column['name']]['is_multiple']= false;
+
+			// if it's a primary keys
+			if($column['pk']) {
+				$columns[$column['name']]['is_disabled'] = true;
+			}
+
+			// if it's a relation column
+			if(
+				stripos($column['name'], 'id_') === 0 || 
+				stripos($column['name'], 'is_') === 0 
+			) {
+
+				// the foreign model requires case translation
+
+				// local constant
+
+				$columns[$column['name']]['is_select'] = true;
+			}
+			// if it's a date
+			elseif(
+				stripos($column['name'], '_date') !== false 
+			) {
+				$columns[$column['name']]['is_date'] = true;
+			}
+			if(
+				$column['type'] == 'numeric' || 
+				$column['type'] == 'integer'
+			) {
+				$columns[$column['name']]['is_numeric'] = true;
+			}
+			if(
+				stripos($column['name'], '_array') !== false 
+			) {
+				$columns[$column['name']]['is_multiple'] = true;
+			}
+		}
+
+		return [
+			$columns,
+			$table_name,
+			$object_singular,
+			$table_slug
+		];
+
+	}
+
+	private static function generateRoute(
+		string $bundle_name, 
+		string $table_name
+	) {
+
+		// case convert the bundle name
+		$bundle_name = Inflector::classify($bundle_name);
+		
+		// get some table informations
+		list(
+			$table_schema,
+			$table_name,
+			$object_singular,
+			$table_slug
+		) = self::deduceTableSchema(
+			$table_name
+		);
+
+		// pretty introduction
+		Console\Format::block(
+			'Generating ' . $table_name . ' routes in the '.$bundle_name.' bundle', 
+			'cyan', 
+			null, 
+			['bold']
+		);
+
+		// get the template
+		$template = file_get_contents(
+			self::$_root_path . 
+			'Private/Vendor/polyfony-inc/console/templates/Route.php'
+		);
+
+		// customize it
+		$template = str_replace(
+			[
+				'__Bundle__',
+				'__bundle__',
+				'__Table__',
+				'__table__',
+				'__Singular__',
+				'__datetime__'
+			],
+			[
+				$bundle_name,
+				strtolower($bundle_name),
+				$table_name,
+				$table_slug,
+				$object_singular,
+				date('d/m/Y h:i')
+			],
+			$template
+		);
+
+		// the folder containing that controller
+		$route_root_path = self::$_root_path . 
+			'Private/Bundles/'.$bundle_name.
+			'/Loader/';
+
+		// if it doesn't exist yet
+		if(!is_dir($route_root_path)) {
+			// create it
+			mkdir($route_root_path, 0777, true);
+		}
+
+		$route_path = $route_root_path . 'Route.php';
+
+		if(file_exists($route_path)) {
+			// use existing routes
+			$template  = 
+				file_get_contents($route_path) . 
+				"\n" . 
+				$template;
+			// remove existing route file
+			unlink($route_path);
+		}
+
+		// save the file
+		file_put_contents(
+			$route_path, 
+			$template
+		);
+		// some feedback
+		Console\Format::line(
+			'✓ the '.$table_name.' route file has been generated in bundle '.$bundle_name, 
+			'green', 
+			null
+		);
+
+
+	}
+
+	private static function generateController(
+		string $bundle_name,
+		string $table_name
+	) {
+
+		// case convert the bundle name
+		$bundle_name = Inflector::classify($bundle_name);
+		
+		// get some table informations
+		list(
+			$table_schema,
+			$table_name,
+			$object_singular,
+			$table_slug
+		) = self::deduceTableSchema(
+			$table_name
+		);
+
+		// pretty introduction
+		Console\Format::block(
+			'Generating the ' . $table_name . 'Controller', 
+			'cyan', 
+			null, 
+			['bold']
+		);
+
+		// get the template
+		$template = file_get_contents(
+			self::$_root_path . 
+			'Private/Vendor/polyfony-inc/console/templates/Controller.php'
+		);
+		
+
+		// customize it
+		$template = str_replace(
+			[
+				'__Table__',
+				'__table__',
+				'__Singular__',
+				'__datetime__'
+			],
+			[
+				$table_name,
+				$table_slug,
+				$object_singular,
+				date('d/m/Y h:i')
+			],
+			$template
+		);
+
+		// the folder containing that controller
+		$controller_root_path = self::$_root_path . 
+			'Private/Bundles/'.$bundle_name.
+			'/Controllers/';
+
+		// if it doesn't exist yet
+		if(!is_dir($controller_root_path)) {
+			// create it
+			mkdir($controller_root_path, 0777, true);
+		}
+
+		$controller_path = $controller_root_path . 
+			$table_name.'.php';
+
+		if(file_exists($controller_path)) {
+			// some feedback
+			Console\Format::line(
+				'X the '.$table_name.'Controller already exist in Bundles/'.$bundle_name, 
+				'red', 
+				null
+			);
+		}
+		else {
+			// save the file
+			file_put_contents(
+				$controller_path, 
+				$template
+			);
+			// some feedback
+			Console\Format::line(
+				'✓ the '.$table_name.'Controller has been generated in Bundles/'.$bundle_name, 
+				'green', 
+				null
+			);
+		}
+
+	}
+
+	private static function generateViews(
+		string $bundle_name, 
+		string $table_name
+	) {
+
+		// I'm so ashamed of having to produce such poor quality code...
+		// we should really, REALLY use an actual framework
+		// instead of doing this messy stuff
+
+		// case convert the bundle name
+		$bundle_name = Inflector::classify($bundle_name);
+
+		// get some table informations
+		list(
+			$table_schema,
+			$table_name,
+			$object_singular
+		) = self::deduceTableSchema(
+			$table_name
+		);
+
+		// pretty introduction
+		Console\Format::block(
+			'Generating views for '.$table_name.' in the '.$bundle_name . ' bundle', 
+			'cyan', 
+			null, 
+			['bold']
+		);
+
+		$views_root_folder = 
+			self::$_root_path . 
+			'Private/Bundles/' . 
+			$bundle_name . 
+			'/Views/' . 
+			$table_name. '/';
+
+		// if the views folder doesn't exist yet
+		if(!is_dir($views_root_folder)) {
+			// create it
+			mkdir($views_root_folder, 0777, true);
+		}
+
+		// the index view, for listing and searching
+		$index_view_path 		= $views_root_folder . 'Index.php';
+		$index_view_template 	= file_get_contents(
+			self::$_root_path . 
+			'Private/Vendor/polyfony-inc/console/templates/Views/Index.php'
+		);
+		
+		// the edit view, for editing and creating new records
+		$edit_view_path 		= $views_root_folder . 'Edit.php';
+		$edit_view_template 	= file_get_contents(
+			self::$_root_path . 
+			'Private/Vendor/polyfony-inc/console/templates/Views/Edit.php'
+		);
+		
+		// the delete view, for confirming deletion
+		$delete_view_path 		= $views_root_folder . 'Delete.php';
+		$delete_view_template 	= file_get_contents(
+			self::$_root_path . 
+			'Private/Vendor/polyfony-inc/console/templates/Views/Delete.php'
+		);
+
+		// build the table's legend
+		$index_columns_legend 	= [];
+		$index_columns_filters 	= [];
+		$index_columns_values 	= [];
+		$edit_form_fields = [];
+		foreach($table_schema as $name => $properties) {
+			
+			
+
+			$index_columns_legend[] = str_replace(
+				'__column__',
+				$name,
+				file_get_contents(
+					self::$_root_path . 
+					'Private/Vendor/polyfony-inc/console/templates/Views/Index/Legend.php'
+				)
+			);
+
+			if($properties['is_select']) {
+
+				$relation = Inflector::classify(
+					str_replace(['id_','is_'],'',$name)
+				);
+
+
+				$edit_form_fields[] = str_replace(
+					[
+						'__column__',
+						'__Table__',
+						'__Relation__',
+						'__Singular__'
+					],
+					[
+						$name,
+						$table_name,
+						$relation,
+						$object_singular
+					],
+					file_get_contents(
+						self::$_root_path . 
+						'Private/Vendor/polyfony-inc/console/templates/Views/Edit/Select.php'
+					)
+				);
+
+
+				// FILTERS
+				$index_columns_filters[] = str_replace(
+					[
+						'__column__',
+						'__Table__',
+						'__ConditionType__',
+						'__Multiple__',
+						'__Relation__'
+					],
+					[
+						$name,
+						$table_name,
+						'Where',
+						$properties['is_multiple'] ? '[]' : '',
+						$relation
+					],
+					file_get_contents(
+						self::$_root_path . 
+						'Private/Vendor/polyfony-inc/console/templates/Views/Index/Select.php'
+					)
+				);
+
+
+				// VALUES
+				$index_columns_values[] = str_replace(
+					[
+						'__column__',
+						'__Singular__',
+						'__Relation__'
+					],
+					[
+						$name,
+						$object_singular,
+						$relation
+					],
+					file_get_contents(
+						self::$_root_path . 
+						'Private/Vendor/polyfony-inc/console/templates/Views/Index/ColumnRelation.php'
+					)
+				);
+			}
+			elseif($properties['is_multiple']) {
+
+				$relation = Inflector::classify(
+					str_replace(['_array'],'',$name)
+				).'Labels';
+
+				$edit_form_fields[] = str_replace(
+					[
+						'__column__',
+						'__Table__',
+						'__Relation__',
+						'__Singular__'
+					],
+					[
+						$name,
+						$table_name,
+						$relation,
+						$object_singular
+					],
+					file_get_contents(
+						self::$_root_path . 
+						'Private/Vendor/polyfony-inc/console/templates/Views/Edit/Select.php'
+					)
+				);
+
+				$index_columns_values[] = str_replace(
+					[
+						'__column__',
+						'__Singular__',
+						'__Relation__'
+					],
+					[
+						$name,
+						$object_singular,
+						$relation
+					],
+					file_get_contents(
+						self::$_root_path . 
+						'Private/Vendor/polyfony-inc/console/templates/Views/Index/ColumnRelation.php'
+					)
+				);
+			}
+			else {
+
+				// EDIT
+				$edit_form_fields[] = str_replace(
+					[
+						'__column__',
+						'__Table__',
+						'__Singular__',
+						'__AdditionnalClasses__'
+					],
+					[
+						$name,
+						$table_name,
+						$object_singular,
+						$properties['is_date'] ? 'date' : ''
+					],
+					file_get_contents(
+						self::$_root_path . 
+						'Private/Vendor/polyfony-inc/console/templates/Views/Edit/Input.php'
+					)
+				);
+
+				// FILTERS
+				$index_columns_filters[] = str_replace(
+					[
+						'__Table__',
+						'__column__',
+						'__ConditionType__'
+					],
+					[
+						$table_name,
+						$name,
+						'Contains'
+					],
+					file_get_contents(
+						self::$_root_path . 
+						'Private/Vendor/polyfony-inc/console/templates/Views/Index/Input.php'
+					)
+				);
+
+				// VALUES
+				$index_columns_values[] = str_replace(
+					[
+						'__column__',
+						'__Singular__'
+					],
+					[
+						$name,
+						$object_singular
+					],
+					file_get_contents(
+						self::$_root_path . 
+						'Private/Vendor/polyfony-inc/console/templates/Views/Index/Column.php'
+					)
+				);
+			}
+		}
+
+		$index_columns_legend 	= implode("\n ", $index_columns_legend);
+		$index_columns_filters 	= implode("\n ", $index_columns_filters);
+		$index_columns_values 	= implode("\n ", $index_columns_values);
+		$edit_form_fields		= implode("\n", $edit_form_fields);
+
+		// customize index
+		$index_view_template = str_replace(
+			[
+				'__Table__',
+				'__Singular__',
+				'__Legend__',
+				'__Filters__',
+				'__Columns__'
+			],
+			[
+				$table_name,
+				$object_singular,
+				$index_columns_legend,
+				$index_columns_filters,
+				$index_columns_values
+			],
+			$index_view_template
+		);
+
+
+		// customize edit
+		$edit_view_template = str_replace(
+			[
+				'__Table__',
+				'__Singular__',
+				'__Fields__'
+			],
+			[
+				$table_name,
+				$object_singular,
+				$edit_form_fields
+			],
+			$edit_view_template
+		);
+
+		// customize delete
+		$delete_view_template = str_replace(
+			[
+				'__Table__',
+				'__Singular__'
+			],
+			[
+				$table_name,
+				$object_singular
+			],
+			$delete_view_template
+		);
+
+		// prevent overiding
+		if(file_exists($index_view_path)) {
+			// some feedback
+			Console\Format::line('X the Index view already exist', 'red', null);
+		}
+		else {
+			// save the view
+			file_put_contents(
+				$index_view_path, 
+				$index_view_template
+			);
+			// some feedback
+			Console\Format::line('✓ the Index view has been generated', 'green', null);
+		}
+
+		// prevent overiding
+		if(file_exists($edit_view_path)) {
+			// some feedback
+			Console\Format::line('X the Edit view already exist', 'red', null);
+		}
+		else {
+			// save the view
+			file_put_contents(
+				$edit_view_path, 
+				$edit_view_template
+			);
+			// some feedback
+			Console\Format::line('✓ the Edit view has been generated', 'green', null);
+		}
+
+		// prevent overiding
+		if(file_exists($delete_view_path)) {
+			// some feedback
+			Console\Format::line('X the Delete view already exist', 'red', null);
+		}
+		else {
+			// save the view
+			file_put_contents(
+				$delete_view_path, 
+				$delete_view_template
+			);
+			// some feedback
+			Console\Format::line('✓ the Delete view has been generated', 'green', null);
+		}
+
+
+	}
+
+	private static function generateModel(
+		string $table_name
+	) {
+
+		// get some table informations
+		list(
+			$table_schema,
+			$table_name,
+			$object_singular,
+			$table_slug
+		) = self::deduceTableSchema(
+			$table_name
+		);
+
+		// pretty introduction
+		Console\Format::block(
+			'Generating the ' . $table_name . ' Model', 
+			'cyan', 
+			null, 
+			['bold']
+		);
+
+		// get the template
+		$template = file_get_contents(
+			self::$_root_path . 
+			'Private/Vendor/polyfony-inc/console/templates/Model.php'
+		);
+		
+		// set the destination file
+		$destination_path = self::$_root_path . 
+			'Private/Models/'.$table_name.'.php';
+
+		// customize it
+		$template = str_replace(
+			[
+				'__Table__',
+				'__table__',
+				'__datetime__'
+			],
+			[
+				$table_name,
+				str_replace('_', '-', Inflector::tableize($table_name)),
+				date('d/m/Y h:i')
+			],
+			$template
+		);
+
+		if(file_exists($destination_path)) {
+			// some feedback
+			Console\Format::line('X the '.$table_name.' Model already exist', 'red', null);
+		}
+		else {
+			
+			// save the file
+			file_put_contents(
+				$destination_path, 
+				$template
+			);
+
+			// some feedback
+			Console\Format::line('✓ the '.$table_name.' Model has been generated', 'green', null);
+
+		}
 
 	}
 

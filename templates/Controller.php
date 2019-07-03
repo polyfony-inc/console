@@ -19,7 +19,7 @@ use Polyfony\Form\Token as Token;
 use Polyfony\Form\Captcha as Captcha;
 
 // models aliases
-use Models\__Table__ as Table;
+use Models\__Table__ as __Table__;
 
 // vendors aliases
 use Bootstrap\Alert\Success as OK;
