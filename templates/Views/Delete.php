@@ -1,5 +1,6 @@
 <?php 
 use Polyfony\Locales as Loc; 
+use Polyfony\Form\Token as Token;
 ?>
 <div class="container">
 
@@ -13,7 +14,7 @@ use Polyfony\Locales as Loc;
 			method="post" 
 			enctype="multipart/form-data">
 
-				<?= new Polyfony\Form\Token; ?>
+				<?= new Token; ?>
 
 				<div class="panel-heading lead" style="margin:0">
 

@@ -2,12 +2,15 @@
 use Polyfony\Locales as Loc; 
 use Polyfony\Form as Form;
 use Polyfony\Form\Token as Token;
+use Bootstrap\Alert as Alert;
 ?>
 <div class="container">
 
 	<div class="row">
 
 		<div class="col-md-6 col-md-offset-3">
+
+			<?= Alert::flash(); ?>
 
 			<form 
 			class="panel panel-default form form-horizontal" 

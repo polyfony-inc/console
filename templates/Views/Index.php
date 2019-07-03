@@ -2,11 +2,14 @@
 use Polyfony\Locales as Loc;
 use Polyfony\Form as Form;
 use Polyfony\Router as Router;
+use Bootstrap\Alert as Alert;
 ?>
 <div class="container">
 	<div class="row">
 
 		<div class="col-12">
+
+			<?= Alert::flash(); ?>
 
 			<h1>
 				
