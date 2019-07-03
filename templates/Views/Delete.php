@@ -38,7 +38,7 @@ use Polyfony\Locales as Loc;
 				<div class="panel-footer text-right">
 
 					<a 
-					href="<?= $__Singular__->getUrl('edit'); ?>" 
+					href="<?= $this->__Singular__->getUrl('edit'); ?>" 
 					class="btn btn-sm btn-default">
 						<span class="fa fa-chevron-left"></span> 
 						<?= Loc::get('Cancel'); ?>

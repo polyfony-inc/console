@@ -1,5 +1,6 @@
 <?php
 use Polyfony\Locales as Loc;
+use Polyfony\Form as Form;
 ?>
 <div class="container">
 	<div class="row">
@@ -66,7 +67,7 @@ __Columns__
 							<td class="text-right">
 
 								<a 
-								href="<?⁼ $__Singular__->getUrl('delete'); ?>" 
+								href="<?= $__Singular__->getUrl('delete'); ?>" 
 								class="btn btn-xs btn-link" 
 								data-toggle="tooltip" 
 								data-placement="top" 
@@ -77,7 +78,7 @@ __Columns__
 								</a>
 
 								<a 
-								href="<?⁼ $__Singular__->getUrl(); ?>" 
+								href="<?= $__Singular__->getUrl(); ?>" 
 								class="btn btn-xs btn-link">
 
 									<?= Loc::get('Open'); ?>

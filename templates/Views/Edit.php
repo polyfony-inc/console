@@ -1,5 +1,6 @@
 <?php 
 use Polyfony\Locales as Loc; 
+use Polyfony\Form as Form;
 ?>
 <div class="container">
 
