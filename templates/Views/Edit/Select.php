@@ -12,8 +12,8 @@
 							<?= $this->__Singular__->select(
 								'__column__',
 								[], 
-								// __Table__::__column__
-								// __Relation__::idAsKey()
+								// Models\__Table__::__column__,
+								// Models\__Relation__::idAsKey(),
 								[
 									'class'			=>'form-control',
 									'placeholder'	=>'',

@@ -12,6 +12,7 @@ use Polyfony\Exception as Exception;
 use Polyfony\Security as Security;
 use Polyfony\Response as Response;
 use Polyfony\Request as Request;
+use Polyfony\Router as Router;
 use Polyfony\Config as Config;
 use Polyfony\Keys as Keys;
 
@@ -67,7 +68,9 @@ class __Table__Controller extends Controller {
 		// request has been posted
 		$this->__Table__ = Request::isPost() ? 
 			__Table__::search(
-				Request::post('__Table__')
+				array_filter(
+					Request::post('__Table__')
+				)
 			) : [];
 		
 		// the list view
@@ -141,7 +144,10 @@ class __Table__Controller extends Controller {
 					(new KO);
 
 			// redirect somewhere else
-			Response::previous();
+			Response::setRedirect(
+				Router::reverse('__table__')
+			);
+			Response::render();
 
 		}
 		else {

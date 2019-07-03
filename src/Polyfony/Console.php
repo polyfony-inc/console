@@ -91,13 +91,13 @@ class Console {
 		// 		'Test'
 		// 	]
 		// ],
-		// 'generate-bundle'		=>[
-		// 	'usage'			=>'Console generate-bundle [bundle-name]',
-		// 	'description'	=>'Generate a bundle with full CRUD capabilities based on current database tables',
-		// 	'arguments'		=>[
-		// 		'Bundle'
-		// 	]
-		// ],
+		'generate-bundle'		=>[
+			'usage'			=>'Console generate-bundle [bundle-name]',
+			'description'	=>'Generate a bundle with full CRUD capabilities based on current database tables',
+			'arguments'		=>[
+				'Bundle'
+			]
+		],
 		// 'generate-models'		=>[
 		// 	'usage'			=>'Console generate-models',
 		// 	'description'	=>'Generates all the Private/Models/{Table} based on current database tables'
@@ -301,6 +301,10 @@ class Console {
 
 					case 'generate-bundle':
 
+						self::generateBundle(
+							$_SERVER['argv'][2]
+						);
+
 					break;
 
 					case 'generate-controllers':
@@ -502,6 +506,60 @@ class Console {
 			$object_singular,
 			$table_slug
 		];
+
+	}
+
+	private static function generateBundle(
+		string $bundle_name
+	) {
+
+		// case convert the bundle name
+		$bundle_name = Inflector::classify($bundle_name);
+
+		// get a list of all tables available
+		// read the configuration file
+		$full_ini = array_replace(
+			parse_ini_file(self::$_root_path.'Private/Config/Config.ini', true),
+			parse_ini_file(self::$_root_path.'Private/Config/Dev.ini', true)
+		);
+
+		// get the database path
+		$database_path = realpath(
+			self::$_root_path . 
+			'Public/'.
+			$full_ini['database']['database']
+		);
+
+		$database = new \PDO('sqlite:'.$database_path);
+
+		foreach(
+			$database->query('SELECT name FROM sqlite_sequence;') 
+			as $table
+		) {
+			$table_name = $table['name'];
+
+			// generate all models
+			self::generateModel($table_name);
+
+			// generate all bundle's controllers
+			self::generateController(
+				$bundle_name,
+				$table_name
+			);
+
+			// generate all bundle's views
+			self::generateViews(
+				$bundle_name,
+				$table_name
+			);
+
+			// generate all bundle's route
+			self::generateRoute(
+				$bundle_name,
+				$table_name
+			);
+
+		}
 
 	}
 
