@@ -893,25 +893,29 @@ class Console {
 			}
 			else {
 
-				// EDIT
-				$edit_form_fields[] = str_replace(
-					[
-						'__column__',
-						'__Table__',
-						'__Singular__',
-						'__AdditionnalClasses__'
-					],
-					[
-						$name,
-						$table_name,
-						$object_singular,
-						$properties['is_date'] ? 'date' : ''
-					],
-					file_get_contents(
-						self::$_root_path . 
-						'Private/Vendor/polyfony-inc/console/templates/Views/Edit/Input.php'
-					)
-				);
+				if(!$properties['is_disabled']) {
+
+					// EDIT
+					$edit_form_fields[] = str_replace(
+						[
+							'__column__',
+							'__Table__',
+							'__Singular__',
+							'__AdditionnalClasses__'
+						],
+						[
+							$name,
+							$table_name,
+							$object_singular,
+							$properties['is_date'] ? 'date' : ''
+						],
+						file_get_contents(
+							self::$_root_path . 
+							'Private/Vendor/polyfony-inc/console/templates/Views/Edit/Input.php'
+						)
+					);
+
+				}
 
 				// FILTERS
 				$index_columns_filters[] = str_replace(
@@ -979,12 +983,14 @@ class Console {
 			[
 				'__Table__',
 				'__Singular__',
-				'__Fields__'
+				'__Fields__',
+				'__table__'
 			],
 			[
 				$table_name,
 				$object_singular,
-				$edit_form_fields
+				$edit_form_fields,
+				strtolower($table_name)
 			],
 			$edit_view_template
 		);

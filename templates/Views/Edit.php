@@ -1,6 +1,7 @@
 <?php 
 use Polyfony\Locales as Loc; 
 use Polyfony\Form as Form;
+use Polyfony\Router as Router;
 use Polyfony\Form\Token as Token;
 use Bootstrap\Alert as Alert;
 ?>
@@ -41,6 +42,15 @@ use Bootstrap\Alert as Alert;
 
 						<span class="fa fa-trash"></span> 
 						<?= Loc::get('Delete'); ?>
+
+					</a>
+
+					<a 
+					href="<?= Router::reverse('__table__'); ?>" 
+					class="btn btn-sm btn-link pull-right">
+
+						<span class="fa fa-chevron-left"></span> 
+						<?= Loc::get('Back'); ?>
 
 					</a>
 
