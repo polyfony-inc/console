@@ -13,6 +13,8 @@ use Polyfony\Locales as Loc;
 			method="post" 
 			enctype="multipart/form-data">
 
+				<?= new Polyfony\Form\Token; ?>
+
 				<div class="panel-heading lead" style="margin:0">
 
 					<span class="fa fa-trash"></span> 

@@ -797,15 +797,11 @@ class Console {
 					[
 						'__column__',
 						'__Table__',
-						'__ConditionType__',
-						'__Multiple__',
 						'__Relation__'
 					],
 					[
 						$name,
 						$table_name,
-						'Where',
-						$properties['is_multiple'] ? '[]' : '',
 						$relation
 					],
 					file_get_contents(
@@ -858,6 +854,24 @@ class Console {
 					)
 				);
 
+				// FILTERS
+				$index_columns_filters[] = str_replace(
+					[
+						'__column__',
+						'__Table__',
+						'__Relation__'
+					],
+					[
+						$name,
+						$table_name,
+						$relation
+					],
+					file_get_contents(
+						self::$_root_path . 
+						'Private/Vendor/polyfony-inc/console/templates/Views/Index/Select.php'
+					)
+				);
+
 				$index_columns_values[] = str_replace(
 					[
 						'__column__',
@@ -902,12 +916,10 @@ class Console {
 					[
 						'__Table__',
 						'__column__',
-						'__ConditionType__'
 					],
 					[
 						$table_name,
 						$name,
-						'Contains'
 					],
 					file_get_contents(
 						self::$_root_path . 
@@ -945,14 +957,16 @@ class Console {
 				'__Singular__',
 				'__Legend__',
 				'__Filters__',
-				'__Columns__'
+				'__Columns__',
+				'__table__'
 			],
 			[
 				$table_name,
 				$object_singular,
 				$index_columns_legend,
 				$index_columns_filters,
-				$index_columns_values
+				$index_columns_values,
+				strtolower($table_name)
 			],
 			$index_view_template
 		);

@@ -1,18 +1,21 @@
 <?php 
 use Polyfony\Locales as Loc; 
 use Polyfony\Form as Form;
+use Polyfony\Form\Token as Token;
 ?>
 <div class="container">
 
 	<div class="row">
 
-		<div class="col-md-6 col-md-offset-6">
+		<div class="col-md-6 col-md-offset-3">
 
 			<form 
 			class="panel panel-default form form-horizontal" 
 			action="" 
 			method="post" 
 			enctype="multipart/form-data">
+
+				<?= new Token; ?>
 
 				<div class="panel-heading lead" style="margin:0">
 

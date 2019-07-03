@@ -1,6 +1,7 @@
 <?php
 use Polyfony\Locales as Loc;
 use Polyfony\Form as Form;
+use Polyfony\Router as Router;
 ?>
 <div class="container">
 	<div class="row">
@@ -11,7 +12,19 @@ use Polyfony\Form as Form;
 				
 				<span class="fa fa-__Icon__"></span>
 				__Table__ 
-				(<?= count($this->__Table__); ?>
+				(<?= count($this->__Table__); ?>)
+
+				<a 
+				href="<?= Router::reverse('__table__', ['action'=>'create']); ?>" 
+				class="btn btn-link btn-sm pull-right">
+
+					<span class="fa fa-plus"></span> 
+					<?= Loc::get('Create_new'); ?> 
+					<strong>
+						__Singular__
+					</strong>
+
+				</a>
 
 			</h1>
 

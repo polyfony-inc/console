@@ -38,17 +38,18 @@ class __Table__Controller extends Controller {
 		// Enforce a global security
 		// Security::enforce('control-__table__', 1);
 
-		// Response\HTML::set([
-		// 	'metas'		=>[
-		// 		'title'			=>'',
-		// 		'description'	=>'',
-		// 		'robots'		=>''
-		// 	],
-		// 	'links'	=>[
-		// 	],
-		// 	'scripts'=>[
-		// 	]
-		// ]);
+		Response\HTML::set([
+			'metas'		=>[
+				'title'	=>'__Bundle__ - __Table__'
+			],
+			'links'		=>[
+				'//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css',
+				'//use.fontawesome.com/releases/v5.3.1/css/all.css'
+			],
+			'scripts'	=>[
+				'//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js'
+			]
+		]);
 
 		// ...
 
@@ -85,7 +86,7 @@ class __Table__Controller extends Controller {
 		// Security::enforce('edit-__table__', 1);
 
 		// get that __Singular__
-		$this->__Singular__ = new __Table__(Request::post('id'));
+		$this->__Singular__ = new __Table__(Request::get('id'));
 
 		// request has been posted
 		if(Request::isPost()) {
@@ -124,7 +125,7 @@ class __Table__Controller extends Controller {
 		// Security::enforce('delete-__table__', 1);
 
 		// get that __Singular__
-		$this->__Singular__ = new __Table__(Request::post('id'));
+		$this->__Singular__ = new __Table__(Request::get('id'));
 
 		// request has been posted
 		if(Request::isPost()) {

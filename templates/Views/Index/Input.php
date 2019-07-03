@@ -1,6 +1,6 @@
 							<th>
 								<?= Form::input(
-									'__Table__[__column__][__ConditionType__]',
+									'__Table__[__column__]',
 									null,
 									[
 										'class'			=>'form-control',
