@@ -635,13 +635,15 @@ class Console {
 				'__Table__',
 				'__table__',
 				'__Singular__',
-				'__datetime__'
+				'__datetime__',
+				'__Bundle__'
 			],
 			[
 				$table_name,
 				$table_slug,
 				$object_singular,
-				date('d/m/Y h:i')
+				date('d/m/Y h:i'),
+				$bundle_name
 			],
 			$template
 		);
