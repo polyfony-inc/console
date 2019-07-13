@@ -11,6 +11,9 @@
 namespace Polyfony;
 
 use Doctrine\Common\Inflector\Inflector;
+use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\TestSuite;
+use PHPUnit\TextUI\TestRunner;
 
 // the class itself
 class Console {
@@ -84,13 +87,13 @@ class Console {
 		// 	'usage'			=>'Console run-tests',
 		// 	'description'	=>'Runs all available tests in Private/Tests/'
 		// ],
-		// 'run-test'		=>[
-		// 	'usage'			=>'Console run-test [test-name]',
-		// 	'description'	=>'Runs a specific test',
-		// 	'arguments'		=>[
-		// 		'Test'
-		// 	]
-		// ],
+		'run-test'		=>[
+			'usage'			=>'Console run-test [test-name]',
+			'description'	=>'Runs a specific test',
+			'arguments'		=>[
+				'Test'
+			]
+		],
 		'generate-bundle'		=>[
 			'usage'			=>'Console generate-bundle [bundle-name]',
 			'description'	=>'Generate a bundle with full CRUD capabilities based on current database tables',
@@ -296,6 +299,10 @@ class Console {
 					break;
 
 					case 'run-test':
+
+						self::runTest(
+							$_SERVER['argv'][2]
+						);
 
 					break;
 
@@ -506,6 +513,73 @@ class Console {
 			$object_singular,
 			$table_slug
 		];
+
+	}
+
+	// check weither or not all test pass
+	private static function doTestsPass() :bool {
+
+		/*
+
+		// instanciate a PHPUnit test suite
+		$test = new TestSuite;
+
+		// add our test to the testsuite
+		$test->addTestSuite(\Tests\FuckTest::class);
+
+		// run said test
+		$result = $test->run();
+
+		// display the results somehow
+		// $result->wasSuccessful()
+
+		*/
+
+	}
+
+	private static function getAvailableTests() :array {
+		return [];
+	}
+
+	// run test and display in the CLI
+	private static function runTests() {
+
+		// pretty introduction
+		Console\Format::block(
+			'Running all tests', 
+			'cyan', 
+			null, 
+			['bold']
+		);
+
+		foreach(self::getAvailableTest() as $test_class) {
+
+		}
+
+	}
+
+	// run test and display in the CLI
+	private static function runTest(
+		string $test_name
+	) {
+
+		// rename the test so that it understand namespaces
+		$test_name = str_replace('/','\\', $test_name);
+
+		// instanciate the framework environment
+		new Front\Test;
+
+		// instanciate a test suite
+		$suite = new TestSuite;
+
+		// add the desired test to the suite
+		$suite->addTestSuite('\Tests\\'.$test_name);
+		
+		// instanciate a test runner
+		$runner = new TestRunner;
+
+		// run the testsuite (and display the results directly)
+		$runner->doRun($suite, [], false);
 
 	}
 
