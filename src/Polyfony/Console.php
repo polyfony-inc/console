@@ -14,6 +14,7 @@ use Doctrine\Common\Inflector\Inflector;
 use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\TestSuite;
 use PHPUnit\TextUI\TestRunner;
+use Symfony\Component\Finder\Finder;
 
 // the class itself
 class Console {
@@ -83,10 +84,10 @@ class Console {
 			'usage'			=>'Console generate-syminks',
 			'description'	=>'Generates symlinks from Private/Bundles/{$1}/Assets/{$2} to Public/Assets/{$2}/{$1}'
 		],
-		// 'run-tests'		=>[
-		// 	'usage'			=>'Console run-tests',
-		// 	'description'	=>'Runs all available tests in Private/Tests/'
-		// ],
+		'run-tests'		=>[
+			'usage'			=>'Console run-tests',
+			'description'	=>'Runs all available tests in Private/Tests/'
+		],
 		'run-test'		=>[
 			'usage'			=>'Console run-test [test-name]',
 			'description'	=>'Runs a specific test',
@@ -295,6 +296,8 @@ class Console {
 					break;
 
 					case 'run-tests':
+
+						self::runTests();
 
 					break;
 
@@ -537,8 +540,13 @@ class Console {
 
 	}
 
-	private static function getAvailableTests() :array {
-		return [];
+	private static function getAvailableTests() :iterable {
+		// instanciate a files finder
+		$finder = new Finder;
+		// find all files in the current directory
+		$finder->files()->in(self::$_root_path.'Private/Tests/');
+		// return the list of found files
+		return $finder;
 	}
 
 	// run test and display in the CLI
@@ -546,14 +554,16 @@ class Console {
 
 		// pretty introduction
 		Console\Format::block(
-			'Running all tests', 
+			'Running all available tests', 
 			'cyan', 
 			null, 
 			['bold']
 		);
 
-		foreach(self::getAvailableTest() as $test_class) {
-
+		// for each found testset
+		foreach(self::getAvailableTests() as $file) {
+			// run those tests
+			self::runTest($file->getRelativePathname());
 		}
 
 	}
@@ -564,11 +574,19 @@ class Console {
 	) {
 
 		// rename the test so that it understand namespaces
-		$test_name = str_replace('/','\\', $test_name);
+		$test_name = str_replace(['/','.php'],['\\',''], $test_name);
+
+		// pretty introduction
+		Console\Format::block(
+			'Testing '.$test_name, 
+			'yellow', 
+			null, 
+			[]
+		);
 
 		// instanciate the framework environment
 		new Front\Test;
-
+		
 		// instanciate a test suite
 		$suite = new TestSuite;
 
