@@ -4,26 +4,26 @@ use Polyfony\Form\Token as Token;
 ?>
 <div class="container">
 
-	<div class="row">
+	<div class="row justify-content-center">
 
-		<div class="col-md-6 col-md-offset-3">
+		<div class="col-12 col-md-10 col-lg-6">
 
 			<form 
-			class="panel panel-default form form-horizontal" 
+			class="card card-default form form-horizontal" 
 			action="" 
 			method="post" 
 			enctype="multipart/form-data">
 
 				<?= new Token; ?>
 
-				<div class="panel-heading lead" style="margin:0">
+				<div class="card-header lead" style="margin:0">
 
 					<span class="fa fa-trash"></span> 
 					<?= Loc::get('Delete '); ?> __Singular__ ID N° 
 					<?= $this->__Singular__->get('id'); ?>
 
 				</div>
-				<div class="panel-body">
+				<div class="card-body">
 
 					<p class="lead text-center">
 						<?= Loc::get('You_are_about_to_delete'); ?> 
@@ -38,7 +38,7 @@ use Polyfony\Form\Token as Token;
 
 
 				</div>
-				<div class="panel-footer text-right">
+				<div class="card-footer text-right">
 
 					<a 
 					href="<?= $this->__Singular__->getUrl('edit'); ?>" 

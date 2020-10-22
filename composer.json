@@ -1,6 +1,6 @@
 {
     "name": "polyfony-inc/console",
-    "description": "CLI helper to use Polyfony",
+    "description": "CLI helper to use Polyfony 3.x +",
     "keywords": ["CLI", "PHP", "Helper", "Console", "Polyfony"],
     "type": "library",
     "license": "GPL-3.0",
@@ -10,7 +10,7 @@
         }
     ],
     "require":{
-        "php":">=7.1.0",
+        "php":">=7.4.0",
         "polyfony-inc/polyfony": "*",
 	"doctrine/inflector": "^1.3"
     },

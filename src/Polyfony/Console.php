@@ -603,6 +603,7 @@ class Console {
 				'__Table__',
 				'__table__',
 				'__Singular__',
+				'__singular__',
 				'__datetime__'
 			],
 			[
@@ -611,6 +612,7 @@ class Console {
 				$table_name,
 				$table_slug,
 				$object_singular,
+				strtolower($object_singular),
 				date('d/m/Y h:i')
 			],
 			$template
@@ -693,6 +695,7 @@ class Console {
 				'__Table__',
 				'__table__',
 				'__Singular__',
+				'__singular__',
 				'__datetime__',
 				'__Bundle__'
 			],
@@ -700,6 +703,7 @@ class Console {
 				$table_name,
 				$table_slug,
 				$object_singular,
+				strtolower($object_singular),
 				date('d/m/Y h:i'),
 				$bundle_name
 			],
@@ -1151,11 +1155,15 @@ class Console {
 			[
 				'__Table__',
 				'__table__',
+				'__Singular__',
+				'__singular__',
 				'__datetime__'
 			],
 			[
 				$table_name,
 				str_replace('_', '-', Inflector::tableize($table_name)),
+				$object_singular,
+				strtolower($object_singular),
 				date('d/m/Y h:i')
 			],
 			$template

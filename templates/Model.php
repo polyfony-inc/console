@@ -8,28 +8,26 @@
 
 namespace Models;
 
-use Polyfony\Exception as Exception;
-use Polyfony\Database as Database;
-use Polyfony\Security as Security;
-use Polyfony\Locales as Locales;
-use Polyfony\Element as Element;
-use Polyfony\Config as Config;
-use Polyfony\Record as Record;
-use Polyfony\Router as Router;
-use Polyfony\Cache as Cache;
-use Polyfony\Keys as Keys;
+use \Polyfony\{ 
+	Exception, Security, Element, Router, Entity, 
+	Config, Logger, Hashs, Database, Locales, 
+	Entities, Cache, Form\Captcha, Form\Token
+};
 
-class __Table__ extends Record {
+
+class __Table__ extends Entity {
 
 	// cache duration for the idAsKey method
 	CONST ID_AS_KEY_CACHE_DURATION = 3600*24*30;
 
 	// hard validator
 	const VALIDATORS = [
+		// FILTER_VALIDATE_EMAIL, FILTER_VALIDATE_IP, FILTER_VALIDATE_INT...
 	];
 
 	// cleanup filters
 	const FILTERS = [
+		// strtoupper,strtolower, ucfirst, ucfirst, trim, numeric, integer, phone, email, text, slug, length{4-4096}, capslock{30,50,70}	
 	];
 
 	 /////////////////////////////////////
@@ -47,39 +45,28 @@ class __Table__ extends Record {
 		?array $where = [], 
 		?bool $allow_cache = false
 	) :array {
-
 		// of we have it in the cache
 		if(Cache::has('__Table__.idAsKey')) {
-
 			// retrieve from the cache
-			$id_as_key = Cache::get('__Table__.idAsKey');
-
+			$__table__ = Cache::get('__Table__.idAsKey');
 		}
 		else {
-
-			$id_as_key = [];
-
-			foreach(
-				self::all() 
-				as $object
-			) {
-
-				$id_as_key[$object->get('id')] = 
-					$object->get('id');
-
+			$__table__ = [];
+			// for each __singular__
+			foreach(self::all() as $object) {
+				$__table__[$__singular__->get('id')] = 
+					$__singular__->get('id');
 			}
-
 			// put it in the cache
 			Cache::put(
 				'__Table__.idAsKey', 
-				$id_as_key, 
+				$__table__, 
 				true, 
 				self::ID_AS_KEY_CACHE_DURATION
 			);
-
 		}
 
-		return $id_as_key;
+		return $__table__;
 
 	}
 
@@ -104,13 +91,11 @@ class __Table__ extends Record {
 
 		// the base query
 		$query = self::_select();
-
 		// if basic where conditions are provided
 		if($where) {
 			// apply them
 			$query->where($where);
 		}
-
 		// execute and filter the query
 		return self::filter(
 			$query->execute()
@@ -120,24 +105,19 @@ class __Table__ extends Record {
 
 	// filter the result depending on whatever your want
 	public static function filter(
-		array $records
+		array $__table__
 	) :array {
 
 		// for each of the record provided
-		foreach($records as $id_record => $record) {
-
-			// some right are applied here
+		foreach($__table__ as $id => $__singular__) {
+			// some right mangement are applied here
 			if(false) {
-		
 				// remove that record
-				unset($records[$id_record]); 
-		
+				unset($__table__[$id]); 
 			}
-
 		}
-
-		// return the list of allowed records
-		return $records;
+		// return the list of allowed __table__
+		return $__table__;
 
 	}
 
@@ -153,8 +133,7 @@ class __Table__ extends Record {
 
 	// get the url for that object, depending on the user level
 	public function getUrl(
-		?string $action = 'edit',
-		?int $id_level = 1
+		?string $action = 'edit'
 	) :string {
 
 		return Router::reverse(
@@ -168,17 +147,6 @@ class __Table__ extends Record {
 	}
 
 	public function save() :bool {
-
-
-		// if(!$this->get('id')) {
-		// 	'created_on'	=>time(),
-		// 	'created_by'	=>Security::get('id')
-		// }
-
-		// $this->set([
-		// 	'modification_date'	=>time(),
-		// 	'modification_by'	=>Security::get('id')
-		// ]);
 
 		// ... code tweaking
 

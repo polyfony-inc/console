@@ -7,21 +7,21 @@ use Bootstrap\Alert as Alert;
 ?>
 <div class="container">
 
-	<div class="row">
+	<div class="row justify-content-center">
 
-		<div class="col-md-6 col-md-offset-3">
+		<div class="col-12 col-md-10 col-lg-6">
 
 			<?= Alert::flash(); ?>
 
 			<form 
-			class="panel panel-default form form-horizontal" 
+			class="card card-default form form-horizontal" 
 			action="" 
 			method="post" 
 			enctype="multipart/form-data">
 
 				<?= new Token; ?>
 
-				<div class="panel-heading lead" style="margin:0">
+				<div class="card-heading lead" style="margin:0">
 
 					<span class="fa fa-pencil"></span> 
 					__Singular__ 
@@ -55,7 +55,7 @@ use Bootstrap\Alert as Alert;
 					</a>
 
 				</div>
-				<div class="panel-body">
+				<div class="card-body">
 
 __Fields__
 

@@ -6,50 +6,49 @@
  *
  */
 
-// framework aliases
-use Polyfony\Controller as Controller;
-use Polyfony\Exception as Exception;
-use Polyfony\Security as Security;
-use Polyfony\Response as Response;
-use Polyfony\Request as Request;
-use Polyfony\Router as Router;
-use Polyfony\Config as Config;
-use Polyfony\Keys as Keys;
+namespace Controllers;
 
-use Polyfony\Form\Token as Token;
-use Polyfony\Form\Captcha as Captcha;
+// framework aliases
+use \Polyfony\{ 
+	Exception, Security, Response, Request, Element,
+	Router, Form, Config, Logger, Controller, Hashs, 
+	Locales, Cache, Form\Captcha, Form\Token
+};
 
 // models aliases
-use Models\__Table__ as __Table__;
+use \Models\__Table__ as __Table__;
 
 // vendors aliases
-use Bootstrap\Alert\Success as OK;
-use Bootstrap\Alert\Failure as KO;
-use Bootstrap\Alert as Alert;
+use \Bootstrap\{
+	Alert, 
+	Alert\Success as OK, 
+	Alert\Failure, as KO
+};
 
-class __Table__Controller extends Controller {
+// helpers
+// use \Helpers\Something;
+
+
+class __Table__ extends Controller {
 
 	 //  _          __             
 	 // | |__  ___ / _|___ _ _ ___ 
 	 // | '_ \/ -_)  _/ _ \ '_/ -_)
 	 // |_.__/\___|_| \___/_| \___|                            
 
-	public function preAction() {
+	public function before() {
 
 		// Enforce a global security
-		// Security::enforce('control-__table__', 1);
+		// Security::authenticate();
+		// Security::denyUnlessHasRole('__bundle__');
+		// Security::denyUnlessHasPermission('__table__');
 
 		Response\HTML::set([
 			'metas'		=>[
 				'title'	=>'__Bundle__ - __Table__'
 			],
-			'links'		=>[
-				'//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css',
-				'//use.fontawesome.com/releases/v5.3.1/css/all.css'
-			],
-			'scripts'	=>[
-				'//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js'
-			]
+			'links'		=>Config::get('response', 'links'),
+			'scripts'	=>Config::get('response', 'scripts')
 		]);
 
 		// ...
@@ -63,18 +62,20 @@ class __Table__Controller extends Controller {
 	 // | | ' \/ _` / -_) \ /
 	 // |_|_||_\__,_\___/_\_\
                       
-	public function indexAction() {
+	public function index() {
 
-		// request has been posted
-		$this->__Table__ = Request::isPost() ? 
-			__Table__::search(
-				array_filter(
-					Request::post('__Table__')
-				)
-			) : [];
-		
 		// the list view
-		$this->view('__Table__/Index');
+		$this->view('__Table__/Index', [
+			// if a request has been posted
+			'__table__'=>Request::isPost() ? 
+				// search the table
+				__Table__::search(
+					// with filtered down search parameters
+					array_filter(
+						Request::post('__Table__')
+					)
+				) : [];
+		]);
 
 	}
 
@@ -83,26 +84,25 @@ class __Table__Controller extends Controller {
 	 // / -_) _` | |  _|
 	 // \___\__,_|_|\__|
                  
-	public function editAction() {
+	public function edit() {
 
 		// enforce security
-		// Security::enforce('edit-__table__', 1);
+		// Security::denyUnlessHasPermission('edit-__table__');
 
 		// get that __Singular__
-		$this->__Singular__ = new __Table__(Request::get('id'));
+		$__singular__ = new __Table__(Request::get('id'));
 
 		// request has been posted
 		if(Request::isPost()) {
 			
 			// enforce security
-			// Security::enforce('edit-post-__table__', 1);
+			// Security::denyUnlessHasPermission('edit-post-__table__');
 
 			// enforce the CSRF protection
 			Token::enforce();
 
 			// record has been updated/saved ?
-			$this
-				->__Singular__
+			$__singular__
 				->set(Request::post('__Table__'))
 				->save() ? 
 					(new OK) : 
@@ -113,7 +113,9 @@ class __Table__Controller extends Controller {
 
 		}
 
-		$this->view('__Table__/Edit');
+		$this->view('__Table__/Edit', [
+			'__singular__'=>$__singular
+		]);
 
 	}
 
@@ -122,13 +124,13 @@ class __Table__Controller extends Controller {
 	 // / _` / -_) / -_)  _/ -_)
 	 // \__,_\___|_\___|\__\___|
                          
-	public function deleteAction() {
+	public function delete() {
 
 		// enforce security
-		// Security::enforce('delete-__table__', 1);
+		// Security::denyUnlessHasPermission('delete-__table__', 1);
 
 		// get that __Singular__
-		$this->__Singular__ = new __Table__(Request::get('id'));
+		$__singular__ = new __Table__(Request::get('id'));
 
 		// request has been posted
 		if(Request::isPost()) {
@@ -137,11 +139,10 @@ class __Table__Controller extends Controller {
 			Token::enforce();
 
 			// record has been deleted ?
-			$this
-				->__Singular__
+			$__singular__
 				->delete() ? 
-					(new OK) : 
-					(new KO);
+					(new OK)->save() : 
+					(new KO)->save();
 
 			// redirect somewhere else
 			Response::setRedirect(
@@ -152,7 +153,9 @@ class __Table__Controller extends Controller {
 		}
 		else {
 
-			$this->view('__Table__/Delete');
+			$this->view('__Table__/Delete', [
+				'__singular__'=>$__singular__
+			]);
 
 		}
 
@@ -164,13 +167,13 @@ class __Table__Controller extends Controller {
 	 // / _| '_/ -_) _` |  _/ -_)
 	 // \__|_| \___\__,_|\__\___|
                           
-	public function createAction() {
+	public function create() {
 
 		// enforce security
-		// Security::enforce('create-__table__', 1);
+		// Security::denyUnlessHasPermission('create-__table__', 1);
 
 		// get that __Singular__
-		$this->__Singular__ = new __Table__;
+		$__singular__ = new __Table__;
 
 		// request has been posted
 		if(Request::isPost()) {
@@ -179,22 +182,23 @@ class __Table__Controller extends Controller {
 			Token::enforce();
 
 			// record has been updated/saved ?
-			$this
-				->__Singular__
+			$__singular__
 				->set(Request::post('__Table__'))
 				->save() ? 
-					(new OK) : 
-					(new KO);
+					(new OK)->save() : 
+					(new KO)->save();
 
 			// redirect to the previous page
 			Response::setRedirect(
-				$this->__Singular__->getUrl()
+				$__singular__->getUrl()
 			);
 			Response::render();
 
 		}
 
-		$this->view('__Table__/Edit');
+		$this->view('__Table__/Edit', [
+			'__singular__'=>$__singular__
+		]);
 
 	}
 
@@ -204,7 +208,7 @@ class __Table__Controller extends Controller {
 	 // / _` |  _|  _/ -_) '_|
 	 // \__,_|_|  \__\___|_|  
                        
-	public function postAction() {
+	public function after() {
 		// ...
 	}
 
