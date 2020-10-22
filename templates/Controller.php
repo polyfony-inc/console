@@ -22,14 +22,14 @@ use \Models\__Table__ as __Table__;
 use \Bootstrap\{
 	Alert, 
 	Alert\Success as OK, 
-	Alert\Failure, as KO
+	Alert\Failure as KO
 };
 
 // helpers
 // use \Helpers\Something;
 
 
-class __Table__ extends Controller {
+class __Table__Controller extends Controller {
 
 	 //  _          __             
 	 // | |__  ___ / _|___ _ _ ___ 
@@ -74,7 +74,7 @@ class __Table__ extends Controller {
 					array_filter(
 						Request::post('__Table__')
 					)
-				) : [];
+				) : []
 		]);
 
 	}

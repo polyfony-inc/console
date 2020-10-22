@@ -932,12 +932,18 @@ class Console {
 					[
 						'__column__',
 						'__Table__',
+						'__table__',
+						'__Singular__',
+						'__singular__',
 						'__Relation__',
 						'__Singular__'
 					],
 					[
 						$name,
 						$table_name,
+						$table_slug,
+						$object_singular,
+						strtolower($object_singular),
 						$relation,
 						$object_singular
 					],
@@ -953,11 +959,17 @@ class Console {
 					[
 						'__column__',
 						'__Table__',
+						'__table__',
+						'__Singular__',
+						'__singular__',
 						'__Relation__'
 					],
 					[
 						$name,
 						$table_name,
+						$table_slug,
+						$object_singular,
+						strtolower($object_singular),
 						$relation
 					],
 					file_get_contents(
@@ -971,12 +983,18 @@ class Console {
 				$index_columns_values[] = str_replace(
 					[
 						'__column__',
+						'__Table__',
+						'__table__',
 						'__Singular__',
+						'__singular__',
 						'__Relation__'
 					],
 					[
 						$name,
+						$table_name,
+						$table_slug,
 						$object_singular,
+						strtolower($object_singular),
 						$relation
 					],
 					file_get_contents(
@@ -995,14 +1013,18 @@ class Console {
 					[
 						'__column__',
 						'__Table__',
+						'__table__',
 						'__Relation__',
-						'__Singular__'
+						'__Singular__',
+						'__singular__'
 					],
 					[
 						$name,
 						$table_name,
+						$table_slug,
 						$relation,
-						$object_singular
+						$object_singular,
+						strtolower($object_singular)
 					],
 					file_get_contents(
 						self::$_root_path . 
@@ -1015,12 +1037,18 @@ class Console {
 					[
 						'__column__',
 						'__Table__',
-						'__Relation__'
+						'__table__',
+						'__Relation__',
+						'__Singular__',
+						'__singular__'
 					],
 					[
 						$name,
 						$table_name,
-						$relation
+						$table_slug,
+						$relation,
+						$object_singular,
+						strtolower($object_singular)
 					],
 					file_get_contents(
 						self::$_root_path . 
@@ -1031,13 +1059,19 @@ class Console {
 				$index_columns_values[] = str_replace(
 					[
 						'__column__',
+						'__Table__',
+						'__table__',
+						'__Relation__',
 						'__Singular__',
-						'__Relation__'
+						'__singular__'
 					],
 					[
 						$name,
+						$table_name,
+						$table_slug,
+						$relation,
 						$object_singular,
-						$relation
+						strtolower($object_singular)
 					],
 					file_get_contents(
 						self::$_root_path . 
@@ -1054,13 +1088,17 @@ class Console {
 						[
 							'__column__',
 							'__Table__',
+							'__table__',
 							'__Singular__',
+							'__singular__',
 							'__AdditionnalClasses__'
 						],
 						[
 							$name,
 							$table_name,
+							$table_slug,
 							$object_singular,
+							strtolower($object_singular),
 							$properties['is_date'] ? 'date' : ''
 						],
 						file_get_contents(
@@ -1075,11 +1113,17 @@ class Console {
 				$index_columns_filters[] = str_replace(
 					[
 						'__Table__',
+						'__table__',
+						'__Singular__',
+						'__singular__',
 						'__column__',
 					],
 					[
 						$table_name,
-						$name,
+						$table_slug,
+						$object_singular,
+						strtolower($object_singular),
+						$name
 					],
 					file_get_contents(
 						self::$_root_path . 
@@ -1091,11 +1135,17 @@ class Console {
 				$index_columns_values[] = str_replace(
 					[
 						'__column__',
-						'__Singular__'
+						'__Table__',
+						'__table__',
+						'__Singular__',
+						'__singular__',
 					],
 					[
 						$name,
-						$object_singular
+						$table_name,
+						$table_slug,
+						$object_singular,
+						strtolower($object_singular)
 					],
 					file_get_contents(
 						self::$_root_path . 
@@ -1114,7 +1164,9 @@ class Console {
 		$index_view_template = str_replace(
 			[
 				'__Table__',
+				'__table__',
 				'__Singular__',
+				'__singular__',
 				'__Legend__',
 				'__Filters__',
 				'__Columns__',
@@ -1122,7 +1174,9 @@ class Console {
 			],
 			[
 				$table_name,
+				$table_slug,
 				$object_singular,
+				strtolower($object_singular),
 				$index_columns_legend,
 				$index_columns_filters,
 				$index_columns_values,
@@ -1137,14 +1191,16 @@ class Console {
 			[
 				'__Table__',
 				'__Singular__',
+				'__singular__',
 				'__Fields__',
 				'__table__'
 			],
 			[
 				$table_name,
 				$object_singular,
+				strtolower($object_singular),
 				$edit_form_fields,
-				strtolower($table_name)
+				$table_slug
 			],
 			$edit_view_template
 		);
@@ -1153,11 +1209,15 @@ class Console {
 		$delete_view_template = str_replace(
 			[
 				'__Table__',
-				'__Singular__'
+				'__table__',
+				'__Singular__',
+				'__singular__',
 			],
 			[
 				$table_name,
-				$object_singular
+				$table_slug,
+				$object_singular,
+				strtolower($object_singular),
 			],
 			$delete_view_template
 		);
