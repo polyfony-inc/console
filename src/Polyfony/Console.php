@@ -11,6 +11,10 @@
 namespace Polyfony;
 
 use Doctrine\Common\Inflector\Inflector;
+use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\TestSuite;
+use PHPUnit\TextUI\TestRunner;
+use Symfony\Component\Finder\Finder;
 
 // the class itself
 class Console {
@@ -80,17 +84,17 @@ class Console {
 			'usage'			=>'Console generate-syminks',
 			'description'	=>'Generates symlinks from Private/Bundles/{$1}/Assets/{$2} to Public/Assets/{$2}/{$1}'
 		],
-		// 'run-tests'		=>[
-		// 	'usage'			=>'Console run-tests',
-		// 	'description'	=>'Runs all available tests in Private/Tests/'
-		// ],
-		// 'run-test'		=>[
-		// 	'usage'			=>'Console run-test [test-name]',
-		// 	'description'	=>'Runs a specific test',
-		// 	'arguments'		=>[
-		// 		'Test'
-		// 	]
-		// ],
+		'run-tests'		=>[
+			'usage'			=>'Console run-tests',
+			'description'	=>'Runs all available tests in Private/Tests/'
+		],
+		'run-test'		=>[
+			'usage'			=>'Console run-test [test-name]',
+			'description'	=>'Runs a specific test',
+			'arguments'		=>[
+				'Test'
+			]
+		],
 		'generate-bundle'		=>[
 			'usage'			=>'Console generate-bundle [bundle-name]',
 			'description'	=>'Generate a bundle with full CRUD capabilities based on current database tables',
@@ -293,9 +297,15 @@ class Console {
 
 					case 'run-tests':
 
+						self::runTests();
+
 					break;
 
 					case 'run-test':
+
+						self::runTest(
+							$_SERVER['argv'][2]
+						);
 
 					break;
 
@@ -506,6 +516,88 @@ class Console {
 			$object_singular,
 			$table_slug
 		];
+
+	}
+
+	// check weither or not all test pass
+	private static function doTestsPass() :bool {
+
+		/*
+
+		// instanciate a PHPUnit test suite
+		$test = new TestSuite;
+
+		// add our test to the testsuite
+		$test->addTestSuite(\Tests\FuckTest::class);
+
+		// run said test
+		$result = $test->run();
+
+		// display the results somehow
+		// $result->wasSuccessful()
+
+		*/
+
+	}
+
+	private static function getAvailableTests() :iterable {
+		// instanciate a files finder
+		$finder = new Finder;
+		// find all files in the current directory
+		$finder->files()->in(self::$_root_path.'Private/Tests/');
+		// return the list of found files
+		return $finder;
+	}
+
+	// run test and display in the CLI
+	private static function runTests() {
+
+		// pretty introduction
+		Console\Format::block(
+			'Running all available tests', 
+			'cyan', 
+			null, 
+			['bold']
+		);
+
+		// for each found testset
+		foreach(self::getAvailableTests() as $file) {
+			// run those tests
+			self::runTest($file->getRelativePathname());
+		}
+
+	}
+
+	// run test and display in the CLI
+	private static function runTest(
+		string $test_name
+	) {
+
+		// rename the test so that it understand namespaces
+		$test_name = str_replace(['/','.php'],['\\',''], $test_name);
+
+		// pretty introduction
+		Console\Format::block(
+			'Testing '.$test_name, 
+			'yellow', 
+			null, 
+			[]
+		);
+
+		// instanciate the framework environment
+		new Front\Test;
+		
+		// instanciate a test suite
+		$suite = new TestSuite;
+
+		// add the desired test to the suite
+		$suite->addTestSuite('\Tests\\'.$test_name);
+		
+		// instanciate a test runner
+		$runner = new TestRunner;
+
+		// run the testsuite (and display the results directly)
+		$runner->doRun($suite, [], false);
 
 	}
 
