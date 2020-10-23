@@ -1,3 +1,3 @@
 							<td>
-								<!-- $__Singular__->get__Relation__(); -->
+								<!-- $__singular__->get__Relation__(); -->
 							</td>

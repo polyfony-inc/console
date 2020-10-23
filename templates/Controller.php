@@ -6,8 +6,6 @@
  *
  */
 
-namespace Controllers;
-
 // framework aliases
 use \Polyfony\{ 
 	Exception, Security, Response, Request, Element,
@@ -16,7 +14,7 @@ use \Polyfony\{
 };
 
 // models aliases
-use \Models\__Table__ as __Table__;
+use \Models\{ __Table__ };
 
 // vendors aliases
 use \Bootstrap\{
@@ -25,8 +23,8 @@ use \Bootstrap\{
 	Alert\Failure as KO
 };
 
-// helpers
-// use \Helpers\Something;
+// helpers aliases
+// use \Helpers\{ SomethingUseful };
 
 
 class __Table__Controller extends Controller {
@@ -114,7 +112,7 @@ class __Table__Controller extends Controller {
 		}
 
 		$this->view('__Table__/Edit', [
-			'__singular__'=>$__singular
+			'__singular__'=>$__singular__
 		]);
 
 	}

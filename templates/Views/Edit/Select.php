@@ -9,7 +9,7 @@
 
 						<div class="col-md-8">
 						
-							<?= $this->__Singular__->select(
+							<?= $__singular__->select(
 								'__column__',
 								[], 
 								// Models\__Table__::__column__,

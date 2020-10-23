@@ -5,8 +5,6 @@ Polyfony\Router::map(
 	'/__bundle__/__table__/:action/:id/',
 	'__Bundle__/__Table__@{action}',
 	'__table__'
-)->where([
-	'id'=>['is_numeric']
-]);
+);
 
 ?>

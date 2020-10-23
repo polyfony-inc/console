@@ -1,3 +1,3 @@
 							<td>
-								<?= $__Singular__->get('__column__'); ?>
+								<?= $__singular__->get('__column__'); ?>
 							</td>

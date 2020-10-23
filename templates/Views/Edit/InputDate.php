@@ -9,7 +9,7 @@
 
 						<div class="col-md-8">
 						
-							<?= $this->__Singular__->input(
+							<?= $__singular__->input(
 								'__column__',
 								[
 									'class'			=>'form-control date',

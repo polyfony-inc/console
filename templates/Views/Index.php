@@ -4,10 +4,10 @@ use Polyfony\Form as Form;
 use Polyfony\Router as Router;
 use Bootstrap\Alert as Alert;
 ?>
-<div class="container">
+<div class="container-fluid">
 	<div class="row justify-content-center">
 
-		<div class="col-12 col-md-10 col-lg-6">
+		<div class="col-12">
 
 			<?= Alert::flash(); ?>
 
@@ -19,9 +19,9 @@ use Bootstrap\Alert as Alert;
 
 				<a 
 				href="<?= Router::reverse('__table__', ['action'=>'create']); ?>" 
-				class="btn btn-link btn-sm pull-right">
+				class="btn btn-sm btn-primary float-right m-3">
 
-					<span class="fa fa-plus"></span> 
+					<span class="fa fa-plus-circle"></span> 
 					<?= Loc::get('Create_new'); ?> 
 					<strong>
 						__Singular__
@@ -84,7 +84,7 @@ __Columns__
 
 								<a 
 								href="<?= $__singular__->getUrl('delete'); ?>" 
-								class="btn btn-xs btn-link" 
+								class="btn btn-sm btn-light text-danger" 
 								data-toggle="tooltip" 
 								data-placement="top" 
 								title="<?= Loc::get('Delete'); ?>">
@@ -95,7 +95,7 @@ __Columns__
 
 								<a 
 								href="<?= $__singular__->getUrl(); ?>" 
-								class="btn btn-xs btn-link">
+								class="btn btn-sm btn-light">
 
 									<?= Loc::get('Open'); ?>
 									<span class="fa fa-chevron-right"></span> 

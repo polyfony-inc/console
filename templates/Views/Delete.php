@@ -2,25 +2,28 @@
 use Polyfony\Locales as Loc; 
 use Polyfony\Form\Token as Token;
 ?>
-<div class="container">
+<div class="container-fluid">
 
 	<div class="row justify-content-center">
 
-		<div class="col-12 col-md-10 col-lg-6">
+		<div class="col-12 col-md-10 col-lg-5">
 
 			<form 
-			class="card card-default form form-horizontal" 
+			class="card card-default form form-horizontal mt-5" 
 			action="" 
 			method="post" 
 			enctype="multipart/form-data">
 
 				<?= new Token; ?>
 
-				<div class="card-header lead" style="margin:0">
+				<div class="card-header lead">
 
 					<span class="fa fa-trash"></span> 
-					<?= Loc::get('Delete '); ?> __Singular__ ID N° 
-					<?= $this->__Singular__->get('id'); ?>
+					<?= Loc::get('Delete '); ?> __Singular__ 
+
+					<code>
+						ID N° <?= $__singular__->get('id'); ?>
+					</code>
 
 				</div>
 				<div class="card-body">
@@ -28,7 +31,7 @@ use Polyfony\Form\Token as Token;
 					<p class="lead text-center">
 						<?= Loc::get('You_are_about_to_delete'); ?> 
 						<strong>
-							__Singular__ ID <code>N° <?= $this->__Singular__->get('id'); ?></code>
+							__Singular__ ID <code>N° <?= $__singular__->get('id'); ?></code>
 						</strong> 
 						<br />
 						<strong>
@@ -41,8 +44,8 @@ use Polyfony\Form\Token as Token;
 				<div class="card-footer text-right">
 
 					<a 
-					href="<?= $this->__Singular__->getUrl('edit'); ?>" 
-					class="btn btn-sm btn-default">
+					href="<?= $__singular__->getUrl('edit'); ?>" 
+					class="btn btn-sm btn-default float-left">
 						<span class="fa fa-chevron-left"></span> 
 						<?= Loc::get('Cancel'); ?>
 					</a>
