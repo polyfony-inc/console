@@ -19,6 +19,66 @@ use Symfony\Component\Finder\Finder;
 // the class itself
 class Console {
 
+	// cute numbers in ascii art
+	protected static $_ascii_numbers = [
+			1=>[
+				" . ",
+				"'| ",
+				" ' "
+			],
+			2=>[
+				".-.",
+				".''",
+				"`--"
+			],
+			3=>[
+				"-. ",
+				"-| ",
+				"-' "
+			],
+			4=>[
+				". .",
+				"`-|",
+				"  '"
+			],
+			5=>[
+				".-.",
+				"``.",
+				"--'"
+			],
+			6=>[
+				".-.",
+				"|-.",
+				"`-'"
+			],
+			7=>[
+				".-.",
+				" .'",
+				"'  "
+			],
+			8=>[
+				".-.",
+				")-(",
+				"`-'"
+			],
+			9=>[
+				".-.",
+				"`-|",
+				"`-'"
+			],
+			0=>[
+				".-.",
+				"|\|",
+				"`-'"
+			],
+			'.'=>[
+				"   ",
+				"   ",
+				":: "
+			]
+		];
+
+
 	// the root path of the project
 	protected static $_root_path = '';
 
@@ -385,23 +445,53 @@ class Console {
 
 	}
 
-	private static function art() {
+	private static function printArtwork() {
 
 		Console\Format::line(
 			"   _           _           \n".
 			"  |_) _  |   _|_ _  ._     \n".
 			"  |  (_) | \/ | (_) | | \/ \n".
-			"           /            /  \n",
+			"           /            /  ",
 			'cyan',
 			null
 		);
 
+		Console\Format::line(
+			'  version: '. self::getFrameworkVersion()."\n",
+			'yellow',
+			'bold'
+		);
+
+
 	}
+
+	private static function getFrameworkVersion() :string {
+
+		// set the path of the composer.json file
+		$composer_file_path = self::$_root_path.'composer.json';
+		// we have that file available
+		if(file_exists($composer_file_path)) {
+			// parse that file
+			$composer_manifest = json_decode(
+				file_get_contents(
+					$composer_file_path
+				)
+			);
+			// return the version number
+			return (string) $composer_manifest->version;
+		}
+		// we do not have that file, most likely we are in production and it has not been pushed
+		else {
+			// we have no clue
+			return 'unknown';
+		}
+
+	} 
 
 	private static function help() {
 		
 		// greatings
-		self::art();
+		self::printArtwork();
 
 		// main usage
 		Console\Format::line('Usage' , 'white', null, ['bold']);
@@ -856,7 +946,8 @@ class Console {
 		list(
 			$table_schema,
 			$table_name,
-			$object_singular
+			$object_singular,
+			$table_slug
 		) = self::deduceTableSchema(
 			$table_name
 		);

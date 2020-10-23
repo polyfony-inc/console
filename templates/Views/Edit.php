@@ -21,7 +21,7 @@ use Bootstrap\Alert as Alert;
 
 				<?= new Token; ?>
 
-				<div class="card-heading lead" style="margin:0">
+				<div class="card-header lead">
 
 					<span class="fa fa-pencil"></span> 
 					__Singular__ 

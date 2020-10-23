@@ -5,9 +5,9 @@ use Polyfony\Router as Router;
 use Bootstrap\Alert as Alert;
 ?>
 <div class="container">
-	<div class="row">
+	<div class="row justify-content-center">
 
-		<div class="col-12">
+		<div class="col-12 col-md-10 col-lg-6">
 
 			<?= Alert::flash(); ?>
 
@@ -15,7 +15,7 @@ use Bootstrap\Alert as Alert;
 				
 				<span class="fa fa-__Icon__"></span>
 				__Table__ 
-				(<?= count($this->__Table__); ?>)
+				(<?= count($__table__); ?>)
 
 				<a 
 				href="<?= Router::reverse('__table__', ['action'=>'create']); ?>" 
@@ -71,7 +71,7 @@ __Filters__
 				</thead>
 
 				<tbody>
-					<?php foreach($this->__Table__ as $__Singular__): ?>
+					<?php foreach($__table__ as $__singular__): ?>
 						<tr>
 
 							<!-- Columns -->
@@ -83,7 +83,7 @@ __Columns__
 							<td class="text-right">
 
 								<a 
-								href="<?= $__Singular__->getUrl('delete'); ?>" 
+								href="<?= $__singular__->getUrl('delete'); ?>" 
 								class="btn btn-xs btn-link" 
 								data-toggle="tooltip" 
 								data-placement="top" 
@@ -94,7 +94,7 @@ __Columns__
 								</a>
 
 								<a 
-								href="<?= $__Singular__->getUrl(); ?>" 
+								href="<?= $__singular__->getUrl(); ?>" 
 								class="btn btn-xs btn-link">
 
 									<?= Loc::get('Open'); ?>
