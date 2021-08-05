@@ -687,7 +687,7 @@ class Console {
 		$runner = new TestRunner;
 
 		// run the testsuite (and display the results directly)
-		$runner->doRun($suite, [], false);
+		$runner->run($suite, [], false);
 
 	}
 
